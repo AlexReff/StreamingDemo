@@ -9,7 +9,7 @@ builder.Services.AddSignalR();
 
 builder.Services.AddSpaStaticFiles(configuration =>
 {
-    configuration.RootPath = "wwwroot/ClientApp";
+    configuration.RootPath = "wwwroot";
 });
 
 var app = builder.Build();
