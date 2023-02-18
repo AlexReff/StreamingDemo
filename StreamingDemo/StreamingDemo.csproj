@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="cd ClientApp &amp;&amp; yarn build" />
+    <Exec Command="cd ClientApp &amp;&amp; npm build" />
   </Target>
 
 </Project>
