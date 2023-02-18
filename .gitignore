@@ -1,3 +1,4 @@
-﻿StreamingDemo/obj/Debug
-StreamingDemo/obj
-.vs
+﻿.vs
+StreamingDemo/obj/
+StreamingDemo/bin/Debug
+StreamingDemo/wwwroot/ClientApp
