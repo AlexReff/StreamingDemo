@@ -1,8 +1,10 @@
 {
-  "name": "clientapp",
+  "name": "ClientApp",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@microsoft/signalr": "^7.0.3",
+    "@reach/router": "^1.3.4",
     "@reduxjs/toolkit": "^1.9.2",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
@@ -42,5 +44,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/reach__router": "^1.3.11"
   }
 }

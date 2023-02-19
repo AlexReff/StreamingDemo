@@ -10,21 +10,22 @@ This project contains an example of a C# SignalR hub that reads the top posts fr
 
 ## Compatibility
 
-Only tested with:
-  - Visual Studio Community 2022
-  - Windows 10
-  - Node 14.18.1
-  - NPM 6.14.15
+- Visual Studio Community 2022
+- Node 14.18.1
+- NPM 6.14.15
+- Windows 10
 
 ## Prerequisites
 
-1. Create a Script Application for the Reddit API
+1. Create a Web Application for the Reddit API
     - Navigate to https://www.reddit.com/prefs/apps/
     - At the bottom, click the 'Create An App' button
     - Give it any name, such as `demo`
-    - Select `script` for the type
+    - Select `web app` for the type
     - For `redirect uri`, enter the URL the project will be running on:
       - Using Visual Studio run/debug: `https://localhost:7025/`
+    - Your `Reddit:AppId` is the auto-generated string underneath the text `web app`
+    - Your `Reddit:AppSecret` is displayed next to the label `secret`
 
 ## Installation
 
@@ -38,13 +39,25 @@ Only tested with:
 
 3. Right click on the Project in the Solution Explorer, and select `Manage User Secrets`
 
-4. From the Reddit application, copy your `NAME` and `SECRET` so the file looks like:
+4. From the Reddit application, copy your `ID` and `SECRET` so the file looks like:
 
    ```
    {
-    "Reddit:AppId": "NAME",
+    "Reddit:AppId": "ID",
     "Reddit:AppSecret": "SECRET"
    }
    ```
 
-5. Build or run the solution in Visual Studio
+5. Modify appSettings.json `Server:CallbackUrl` if needed
+
+6. Build or run the solution in Visual Studio
+
+## Used Libraries
+
+- [.NET Core 6](https://github.com/dotnet/core)
+- [ASP.NET Core SignalR](https://github.com/dotnet/aspnetcore/tree/main/src/SignalR)
+- [React](https://github.com/facebook/react)
+- [Redux](https://github.com/reduxjs/redux)
+- [React-Redux](https://github.com/reduxjs/react-redux)
+- [D3.js](https://github.com/d3/d3)
+
