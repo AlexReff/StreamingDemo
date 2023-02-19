@@ -1,14 +1,17 @@
 import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { RootState } from '../../store';
 import { RedditApiPostData } from './redditHubTypes';
 
 export interface RedditHubState {
     data: RedditApiPostData[];
+    stats: {};
     status: 'idle' | 'loading' | 'failed' | 'invalid' | 'disconnected';
 }
 
 const initialState: RedditHubState = {
     data: [],
+    stats: {},
     status: 'disconnected',
 };
 
@@ -72,6 +75,9 @@ export const redditHubSlice = createSlice({
         },
         receiveRedditHubData: (state, action: PayloadAction<RedditApiPostData[]>) => {
             state.data = state.data.concat(action.payload);
+            for (const row of action.payload) {
+
+            }
             state.status = 'idle';
         },
         receiveRedditHubConfig: (state, action: PayloadAction<'success' | 'error' | 'empty'>) => {
@@ -110,5 +116,8 @@ export const redditHubSlice = createSlice({
 });
 
 export const { redditHubDisconnect, receiveRedditHubConfig } = redditHubSlice.actions;
+
+export const selectStatus = (state: RootState) => state.redditHub.status;
+export const selectData = (state: RootState) => state.redditHub.data;
 
 export default redditHubSlice.reducer;

@@ -59,5 +59,6 @@ This project contains an example of a C# SignalR hub that reads the top posts fr
 - [React](https://github.com/facebook/react)
 - [Redux](https://github.com/reduxjs/redux)
 - [React-Redux](https://github.com/reduxjs/react-redux)
+- [Victory](https://github.com/FormidableLabs/victory)
 - [D3.js](https://github.com/d3/d3)
 

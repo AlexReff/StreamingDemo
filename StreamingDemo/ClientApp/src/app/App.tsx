@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Router, Link } from "@reach/router"
 import { Layout } from './Layout';
 import { NoMatch } from '../routes/noMatch';
-import { Home } from '../routes/home';
+import { Home } from '../features/home/home';
 
 import './App.css';
 

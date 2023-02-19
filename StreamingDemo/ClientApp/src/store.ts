@@ -15,7 +15,6 @@ export const store = configureStore({
             // .concat(apiConfigMiddleWare)
 });
 
-// store.dispatch(redditHubDefaultConnectAction);
 store.dispatch(connectRedditHub("/hub"));
 
 export type AppDispatch = typeof store.dispatch;

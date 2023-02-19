@@ -1,0 +1,28 @@
+.loadingSpinnerWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loadingSpinner {
+    transition: 1s ease all;
+    transform: translateY(-100%);
+    opacity: 0;
+
+    position: absolute;
+    top: 40px;
+}
+
+.loadingSpinnerEnter {
+    opacity: 1;
+    transform: translateY(0%);
+}
+
+.redditPageWrapper {
+    transition: 1s ease all;
+    opacity: 0;
+}
+
+.redditPageWrapperEnter {
+    opacity: 1;
+}

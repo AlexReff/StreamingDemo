@@ -27,33 +27,34 @@
         public string name { get; set; }
         public string url { get; set; }
         public double upvote_ratio { get; set; }
-        public int score { get; set; }
         public string selftext { get; set; }
-        public int gilded { get; set; }
-        public bool clicked { get; set; }
         public string link_flair_text { get; set; }
         public string thumbnail { get; set; }
+        public string domain { get; set; }
+        public string author { get; set; }
+        public string permalink { get; set; }
+        public string author_flair_background_color { get; set; }
+        public object created_utc { get; set; }
+        public object created { get; set; }
+        public int gilded { get; set; }
+        public int score { get; set; }
+        public int ups { get; set; }
+        public int downs { get; set; }
+        public bool clicked { get; set; }
         public bool is_original_content { get; set; }
         public bool is_created_from_ads_ui { get; set; }
         public bool is_reddit_media_domain { get; set; }
         public bool is_meta { get; set; }
         public bool is_self { get; set; }
         public bool is_video { get; set; }
-        public string domain { get; set; }
         public bool over_18 { get; set; }
         public bool spoiler { get; set; }
         public bool locked { get; set; }
         public bool author_premium { get; set; }
         public bool archived { get; set; }
         public bool pinned { get; set; }
-        public string author { get; set; }
         public bool contest_mode { get; set; }
-        public string permalink { get; set; }
         public bool stickied { get; set; }
-        public string author_flair_background_color { get; set; }
-        public int created_utc { get; set; }
-        public int ups { get; set; }
-        public int downs { get; set; }
         /*
         public int dist { get; set; }
         public string modhash { get; set; }
@@ -90,7 +91,6 @@
         public object gildings { get; set; }
         public object content_categories { get; set; }
         public object mod_note { get; set; }
-        public int created { get; set; }
         public string link_flair_type { get; set; }
         public int? wls { get; set; }
         public object removed_by_category { get; set; }
