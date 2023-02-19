@@ -10,8 +10,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="6.0.14" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-    <PackageReference Include="Reddit" Version="1.5.2" />
-    <PackageReference Include="Reddit.AuthTokenRetrieverLib" Version="1.5.2" />
   </ItemGroup>
 
   <ItemGroup>

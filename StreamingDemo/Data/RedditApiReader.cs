@@ -1,138 +1,51 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using Reddit;
-using Reddit.AuthTokenRetriever;
-using Reddit.AuthTokenRetriever.EventArgs;
-using RestSharp.Extensions;
-using RestSharp.Validation;
+using Microsoft.Extensions.Logging;
 using StreamingDemo.Hubs;
+using StreamingDemo.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection.Metadata;
 using System.Text;
+using System.Threading;
 using System.Web;
-using uhttpsharp;
 
 namespace StreamingDemo.Data
 {
-    public enum ApiReaderStatus
+    public enum RedditApiReaderStatus
     {
         Initialized,
-        MissingIdOrSecret,
-        MissingToken,
-        Connected,
+        MissingSecrets,
+        Ready,
         Error,
     }
 
     public class RedditApiReader
     {
-        // Reddit API limits to 30 updates / minute
-        private readonly TimeSpan _updateInterval = TimeSpan.FromSeconds(2);
+        // Reddit API limits to 60 updates / minute
+        private readonly TimeSpan _updateInterval = TimeSpan.FromSeconds(1.2);
 
-        //private readonly SemaphoreSlim _readerStateLock = new SemaphoreSlim(1, 1);
-        //private readonly SemaphoreSlim _updateStockPricesLock = new SemaphoreSlim(1, 1);
-
-        //private readonly ConcurrentDictionary<string, int> _stocks = new ConcurrentDictionary<string, int>();
-
-        //private static readonly Lazy<RedditApiReader> _instance = new Lazy<RedditApiReader>(() => new RedditApiReader());
-        //private List<string> _data = new List<string>();
+        private readonly SemaphoreSlim _accessTokenSemaphore = new SemaphoreSlim(1);
+        private static readonly object _fetchingNewLock = new object();
 
         private readonly ILogger<RedditApiReader> _logger;
 
         private readonly IConfiguration _config;
-        private readonly IHubContext<RedditHub> _hub;
+        private readonly IHubContext<RedditHub> _hubContext;
         private readonly HttpClient _httpClient;
+        private CancellationTokenSource _cancellationTokenSource;
 
         private readonly string _redditAppId;
         private readonly string _redditAppSecret;
-        //private readonly int _serverPort;
-        public readonly string _redditCallbackUrl;
         
         private static string? _redditAccessToken;
-        private static string? _redditRefreshToken;
-        private static string? _redditAuthorizeURL;
 
-        private static RedditClient? _redditClient;
-        //private static bool? _configSuccess;
-        private static ApiReaderStatus _status;
+        private static RedditApiReaderStatus _status;
+        private static bool _fetchingNew = false;
 
-        public RedditApiReader(IConfiguration config, IHubContext<RedditHub> hub, ILogger<RedditApiReader> logger)
-        {
-            _status = ApiReaderStatus.Initialized;
-
-            _config = config;
-            _hub = hub;
-            _logger = logger;
-
-            _httpClient = new HttpClient();
-
-            //int.TryParse(_config["Server:Port"], out _serverPort);
-
-            _redditAppId = _config["Reddit:AppId"];
-            _redditAppSecret = _config["Reddit:AppSecret"];
-            _redditAccessToken = _config["Reddit:AccessToken"];
-            _redditRefreshToken = _config["Reddit:RefreshToken"];
-
-            _redditCallbackUrl = _config["Server:CallbackUrl"];
-
-            Init();
-        }
-
-        //private void AuthTokenRetrieverLib_AuthSuccess(object? sender, AuthSuccessEventArgs e)
-        //{
-        //    _redditAccessToken = e.AccessToken;
-        //    _redditRefreshToken = e.RefreshToken;
-
-        //    _logger.LogTrace($"RedditApiReader::AuthTokenRetrieverLib_AuthSuccess - AccessToken: {_redditAccessToken} | RefreshToken: {_redditRefreshToken}");
-        //}
-
-        private void Init()
-        {
-            if (string.IsNullOrWhiteSpace(_redditAppId) || string.IsNullOrWhiteSpace(_redditAppSecret))
-            {
-                _status = ApiReaderStatus.MissingIdOrSecret;
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(_redditAccessToken) || string.IsNullOrWhiteSpace(_redditRefreshToken))
-            {
-                //try to retrieve the token
-                _status = ApiReaderStatus.MissingToken;
-
-                _redditAuthorizeURL = $"https://www.reddit.com/api/v1/authorize?client_id={_redditAppId}&response_type=code&state={Guid.NewGuid().ToString("N")}&duration=permanent&scope=read&redirect_uri={HttpUtility.UrlEncode(_redditCallbackUrl)}";
-            }
-            else
-            {
-                // all 3 required fields are provided, attempt to connect
-                InitializeRedditClient();
-                ValidateStatus();
-            }
-        }
-
-        private void InitializeRedditClient()
-        {
-            _redditClient = new RedditClient(appId: _redditAppId, appSecret: _redditAppSecret, accessToken: _redditAccessToken, refreshToken: _redditRefreshToken);
-            _logger.LogTrace($"RedditApiReader::InitializeRedditClient - Reddit:AppId: {_redditAppId} | Reddit:AppSecret: {_redditAppSecret} | Reddit:AccessToken: {_redditAccessToken} | Reddit:RefreshToken: {_redditRefreshToken}");
-        }
-
-        private void ValidateStatus()
-        {
-            try
-            {
-                var count = _redditClient!.FrontPage.Count;
-
-                _status = ApiReaderStatus.Connected;
-                _redditAuthorizeURL = null;
-            }
-            catch (Exception ex)
-            {
-                _status = ApiReaderStatus.Error;
-                _logger.LogTrace($"RedditApiReader::ValidateStatus - Reddit:AppId: {_redditAppId} | Reddit:AppSecret: {_redditAppSecret} | Reddit:AccessToken: {_redditAccessToken} | Reddit:RefreshToken: {_redditRefreshToken}");
-                _logger.LogCritical(ex, "RedditApiReader::ValidateStatus - Failed to retrieve FrontPage Count");
-            }
-        }
-
-        public ApiReaderStatus Status
+        public RedditApiReaderStatus Status
         {
             get
             {
@@ -140,37 +53,187 @@ namespace StreamingDemo.Data
             }
         }
 
-        public string? AuthorizeUrl
+        public RedditApiReader(IConfiguration config, IHubContext<RedditHub> hubContext, ILogger<RedditApiReader> logger)
         {
-            get
+            _status = RedditApiReaderStatus.Initialized;
+
+            _config = config;
+            _hubContext = hubContext;
+            _logger = logger;
+
+            _httpClient = new HttpClient();
+            _httpClient.BaseAddress = new Uri("https://oauth.reddit.com");
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("reffdev-streaming-demo/v0.1.0 (by /u/reffdev)");
+
+            _redditAppId = _config["Reddit:AppId"];
+            _redditAppSecret = _config["Reddit:AppSecret"];
+
+            Init();
+        }
+
+        private void Init()
+        {
+            if (string.IsNullOrWhiteSpace(_redditAppId) || string.IsNullOrWhiteSpace(_redditAppSecret))
             {
-                return _redditAuthorizeURL;
+                _status = RedditApiReaderStatus.MissingSecrets;
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(_redditAccessToken))
+            {
+                var token = RetrieveAccessToken();
+                token.Wait();
+
+                _redditAccessToken = token.Result;
+            }
+
+            if (!string.IsNullOrWhiteSpace(_redditAccessToken))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _redditAccessToken);
+                _status = RedditApiReaderStatus.Ready;
+            }
+            else
+            {
+                _status = RedditApiReaderStatus.Error;
             }
         }
 
-        public Dictionary<string, string> RetrieveAccessTokens(string code)
+        public async Task StartStream()
         {
-            var postData = new Dictionary<string, string>
+            if (_status != RedditApiReaderStatus.Ready)
             {
-                { "grant_type", "authorization_code" },
-                { "code", code },
-                { "redirect_uri", _redditCallbackUrl }
-            };
+                return;
+            }
 
-            var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_redditAppId}:{_redditAppSecret}"));
-
-            HttpClient client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
-
-            var content = new FormUrlEncodedContent(postData);
-
-            HttpResponseMessage response = await _httpClient.PostAsync("https://www.reddit.com/api/v1/access_token", content);
+            lock (_fetchingNewLock)
+            {
+                if (!_fetchingNew)
+                {
+                    _fetchingNew = true;
+                    _cancellationTokenSource = new CancellationTokenSource();
+                    Task.Run(async () => await RetrieveNewPosts(_cancellationTokenSource.Token));
+                }
+            }
         }
 
-        //public IObservable<object> StreamData()
-        //{
-        //    return _subject;
-        //}
+        public async Task StopStream()
+        {
+            if (_fetchingNew)
+            {
+                _fetchingNew = false;
+                _cancellationTokenSource.Cancel();
+            }
+        }
 
+        public async Task RetrieveNewPosts(CancellationToken cancellationToken)
+        {
+            HttpResponseMessage response = null;
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    response = await _httpClient.GetAsync("/new?limit=100");
+
+                    if (response == null || !response.IsSuccessStatusCode)
+                    {
+                        break;
+                    }
+
+                    var content = await response.Content.ReadFromJsonAsync<RedditApiNewResponse>();
+
+                    if (content != null)
+                    {
+                        var message = content.data.children.Select(m => m.data);
+
+                        await _hubContext.Clients.All/*.Group("DataUpdates")*/.SendAsync("data", message);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Handle exception or log error
+                    _logger.LogError(ex, "RedditApiReader::RetrieveNewPosts - Unable to retrieve new posts");
+                    break;
+                }
+
+                await Task.Delay(_updateInterval, cancellationToken);
+            }
+
+            if (response != null)
+            {
+                _logger.LogInformation($"RedditApiReader::RetrieveNewPosts Last response: {response.StatusCode} {response.ReasonPhrase}, {response.IsSuccessStatusCode}, {response.Content}");
+            }
+        }
+
+        private async Task<string> RetrieveAccessToken()
+        {
+            if (!string.IsNullOrWhiteSpace(_redditAccessToken))
+            {
+                return _redditAccessToken;
+            }
+
+            await _accessTokenSemaphore.WaitAsync();
+
+            if (!string.IsNullOrWhiteSpace(_redditAccessToken))
+            {
+                _accessTokenSemaphore.Release();
+                return _redditAccessToken;
+            }
+
+            var postData = new Dictionary<string, string>
+            {
+                { "grant_type", "client_credentials" }
+            };
+
+            HttpResponseMessage response = null;
+
+            try
+            {
+                var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_redditAppId}:{_redditAppSecret}"));
+
+                var currentAuth = _httpClient.DefaultRequestHeaders.Authorization;
+
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
+
+                FormUrlEncodedContent content = new FormUrlEncodedContent(postData);
+
+                response = await _httpClient.PostAsync("https://www.reddit.com/api/v1/access_token", content);
+
+                _httpClient.DefaultRequestHeaders.Authorization = currentAuth;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "RedditApiReader::RetrieveAccessToken - Unable to retrieve access token");
+            }
+
+            if (response != null)
+            {
+                RedditAccessTokenResponse? data = null;
+
+                try
+                {
+                    string cont = await response.Content.ReadAsStringAsync();
+                    data = await response.Content.ReadFromJsonAsync<RedditAccessTokenResponse>();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "RedditApiReader::RetrieveAccessToken - Unexpected response from server");
+                }
+
+                if (data != null && !string.IsNullOrWhiteSpace(data.access_token))
+                {
+                    _redditAccessToken = data.access_token;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(_redditAccessToken))
+            {
+                _logger.LogTrace($"RedditApiReader::RetrieveAccessToken - Failed to retrieve access token for appId: ${_redditAppId} | secret: ${_redditAppSecret}");
+                _logger.LogError("RedditApiReader::RetrieveAccessToken - Unable to retrieve Access Token");
+            }
+
+            _accessTokenSemaphore.Release();
+            return _redditAccessToken;
+        }
     }
 }

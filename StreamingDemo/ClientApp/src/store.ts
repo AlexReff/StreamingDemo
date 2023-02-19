@@ -1,21 +1,22 @@
 import { combineReducers, configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import counterReducer from './features/counter/counterSlice';
-import { redditHubDefaultConnectAction, redditHubMiddleWare } from './features/redditHub/redditHubMiddleware';
+import redditHubReducer, { connectRedditHub } from './features/redditHub/redditHubSlice';
 
 const rootReducer = combineReducers({
     counter: counterReducer,
+    redditHub: redditHubReducer,
 });
 
 export const store = configureStore({
     reducer: rootReducer,
-    middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware()
-            .concat(redditHubMiddleWare)
+    // middleware: (getDefaultMiddleware) =>
+    //     getDefaultMiddleware()
+    //         .concat(redditHubMiddleWare)
             // .concat(apiConfigMiddleWare)
 });
 
-// store.dispatch({ type: 'CONFIG_STATUS' });
 // store.dispatch(redditHubDefaultConnectAction);
+store.dispatch(connectRedditHub("/hub"));
 
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof rootReducer>;
