@@ -16,8 +16,4 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="chdir ClientApp &amp;&amp; npm run-script build" />
-  </Target>
-
 </Project>
