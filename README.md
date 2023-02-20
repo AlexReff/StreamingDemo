@@ -93,7 +93,7 @@ This work-in-progress project contains a demo of a C# .NET Core application that
     - Consistent logging & exception handling
     - New serverless backends (AWS, Azure)
 - Config
-    - Github configurations
+    - Github configurations & production-ready branch management
 
 ## Usage
 
