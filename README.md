@@ -1,12 +1,12 @@
 # SignalR Streaming Data Demo
 
-This project contains a demo of a C# SignalR hub that polls new posts and streams the data to a React client that displays charts on various statistics.
+This project contains a demo of a C# SignalR hub that polls new posts and streams the data to a React client which displays charts on various statistics via Victory.
 
 ## Requirements
 
-- Visual Studio
-- .NET 6
-- Node.js and npm
+- [Visual Studio](https://visualstudio.microsoft.com/)
+- [.NET 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
+- [Node.js and npm](https://nodejs.org/)
 
 ## Compatibility
 
@@ -62,10 +62,11 @@ This project contains a demo of a C# SignalR hub that polls new posts and stream
 ## Known Issues
 
 - Incomplete styling/layout
-- Unoptimized data processing - will eventually lag if tab left open
-- Data retrieval and processing still happening while tab is inactive
-- No error messaging shown if app is unable to connect to RedditApi
 - Graph animations bugged
+- Unoptimized data processing - slows down the longer the tab is alive
+- Data retrieval and processing still happening while tab is inactive
+- Front-end silently fails if Api backend fails
+- Access token will eventually expire
 
 ## TODO
 
