@@ -1,6 +1,6 @@
 # SignalR Streaming Data Demo
 
-This project contains an example of a C# SignalR hub that reads the top posts from a specified subreddit in the Reddit API and sends the data to a JavaScript client.
+This project contains a demo of a C# SignalR hub that polls new posts and streams the data to a React client that displays charts on various statistics.
 
 ## Requirements
 
