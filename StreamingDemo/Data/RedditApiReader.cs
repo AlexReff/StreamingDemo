@@ -25,7 +25,7 @@ namespace StreamingDemo.Data
     public class RedditApiReader
     {
         // Reddit API limits to 60 updates / minute
-        private readonly TimeSpan _updateInterval = TimeSpan.FromSeconds(1.2);
+        private readonly TimeSpan _updateInterval = TimeSpan.FromSeconds(3);
 
         private readonly SemaphoreSlim _accessTokenSemaphore = new SemaphoreSlim(1);
         private static readonly object _fetchingNewLock = new object();
@@ -111,7 +111,7 @@ namespace StreamingDemo.Data
                 {
                     _fetchingNew = true;
                     _cancellationTokenSource = new CancellationTokenSource();
-                    Task.Run(async () => await RetrieveNewPosts(_cancellationTokenSource.Token));
+                    Task.Run(async () => await RetrieveRandomPosts(_cancellationTokenSource.Token));
                 }
             }
         }
@@ -125,7 +125,7 @@ namespace StreamingDemo.Data
             }
         }
 
-        public async Task RetrieveNewPosts(CancellationToken cancellationToken)
+        public async Task RetrieveRandomPosts(CancellationToken cancellationToken)
         {
             HttpResponseMessage response = null;
 
@@ -133,14 +133,15 @@ namespace StreamingDemo.Data
             {
                 try
                 {
-                    response = await _httpClient.GetAsync("/new?limit=100");
+                    response = await _httpClient.GetAsync("/r/all/new?limit=100");
 
                     if (response == null || !response.IsSuccessStatusCode)
                     {
                         break;
                     }
 
-                    var content = await response.Content.ReadFromJsonAsync<RedditApiNewResponse>();
+                    //string strRes = await response.Content.ReadAsStringAsync();
+                    var content = await response.Content.ReadFromJsonAsync<RedditApiPostListResponse>();
 
                     if (content != null)
                     {

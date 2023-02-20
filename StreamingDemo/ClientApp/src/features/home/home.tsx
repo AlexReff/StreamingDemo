@@ -1,9 +1,9 @@
 import { RouteComponentProps } from '@reach/router';
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ColorRing } from 'react-loader-spinner';
-import { selectStatus } from '../redditHub/redditHubSlice';
-import { RedditPage } from '../redditHub/redditPage';
-import { useAppSelector } from '../../hooks';
+import { connectRedditHub, redditHubDisconnect, selectStatus } from '../redditHub/redditHubSlice';
+import { RedditPage } from '../redditPage/redditPage';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 import styles from './Home.module.css';
 import classNames from 'classnames';
 import { useTransition } from 'transition-hook';
@@ -12,10 +12,14 @@ interface HomeProps {
     //
 }
 
+// connects the app to SignalR and displays the visualization page
 export const Home: React.FC<HomeProps & RouteComponentProps> = ({ }) => {
     const status = useAppSelector(selectStatus);
+
+    //transition animation hooks
     const { stage: stageSpinner, shouldMount: shouldMountSpinner } = useTransition(status == 'disconnected', 1000);
     const { stage: stagePage, shouldMount: shouldMountPage } = useTransition(status == 'idle', 1000);
+
     return (
         <div>
             {shouldMountSpinner && (
@@ -42,6 +46,6 @@ export const Home: React.FC<HomeProps & RouteComponentProps> = ({ }) => {
                     <RedditPage />
                 </div>
             )}
-        </div >
+        </div>
     );
 };

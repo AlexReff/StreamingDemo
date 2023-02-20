@@ -1,6 +1,6 @@
 ﻿namespace StreamingDemo.Models
 {
-    public class RedditApiNewResponse
+    public class RedditApiPostListResponse
     {
         public string kind { get; set; }
         public RedditApiNewData data { get; set; }

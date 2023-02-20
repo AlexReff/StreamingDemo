@@ -48,9 +48,7 @@ This project contains an example of a C# SignalR hub that reads the top posts fr
    }
    ```
 
-5. Modify appSettings.json `Server:CallbackUrl` if needed
-
-6. Build or run the solution in Visual Studio
+5. Build or run the solution in Visual Studio
 
 ## Used Libraries
 
@@ -60,5 +58,24 @@ This project contains an example of a C# SignalR hub that reads the top posts fr
 - [Redux](https://github.com/reduxjs/redux)
 - [React-Redux](https://github.com/reduxjs/react-redux)
 - [Victory](https://github.com/FormidableLabs/victory)
-- [D3.js](https://github.com/d3/d3)
 
+## TODO/Known Issues:
+
+- Tests
+- CSS/styling on graph & page/layout, fix animations
+- Dis/Reconnect client when inactive
+- Finish decoupling & undo-ing hack-work
+- Clean/remove comments & leftover code
+- Reduce size of model being sent to client
+- Server-side throttling/security/rate limiting
+- Create distinct endpoints per graph
+- Expand/configure SignalR implementation
+- Consistent logging & exception handling
+- Add visualization features (filtering) & new views/viz
+- New serverless backends (AWS, Azure)
+- Github configurations
+- Theming
+
+## Usage
+
+## Notes

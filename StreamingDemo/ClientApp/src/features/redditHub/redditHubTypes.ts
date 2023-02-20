@@ -1,5 +1,5 @@
 
-export interface RedditApiPostData {
+export interface IRedditApiPostData {
     id: string;
     subreddit: string;
     subreddit_name_prefixed: string;
@@ -36,3 +36,50 @@ export interface RedditApiPostData {
     ups: number;
     downs: number;
 }
+
+export type KeysOfType<T, V> = {
+    [K in keyof T]: T[K] extends V ? K : never;
+}[keyof T];
+
+export type RedditApiKeysOfTypeNumber = KeysOfType<IRedditApiPostData, number>;
+
+export const RedditApiNumbFields: RedditApiKeysOfTypeNumber[] =
+    [
+        "ups",
+        "downs",
+        "score",
+        "gilded",
+        // "created_utc",
+        // "upvote_ratio",
+    ];
+
+export type RedditApiKeysOfTypeBool = KeysOfType<IRedditApiPostData, boolean>;
+
+export const RedditApiBoolFields: RedditApiKeysOfTypeBool[] =
+    [
+        "clicked",
+        "is_original_content",
+        "is_created_from_ads_ui",
+        "is_reddit_media_domain",
+        "is_meta",
+        "is_self",
+        "is_video",
+        "over_18",
+        "spoiler",
+        "locked",
+        "author_premium",
+        "archived",
+        "pinned",
+        "contest_mode",
+        "stickied",
+    ];
+
+export type RedditApiKeysOfTypeString = KeysOfType<IRedditApiPostData, string>;
+
+export const RedditApiTextFields: RedditApiKeysOfTypeString[] =
+    [
+        "author",
+        "domain",
+        "subreddit",
+        "subreddit_type"
+    ];
