@@ -61,20 +61,29 @@ This project contains an example of a C# SignalR hub that reads the top posts fr
 
 ## TODO/Known Issues:
 
-- Tests
-- CSS/styling on graph & page/layout, fix animations
-- Dis/Reconnect client when inactive
-- Finish decoupling & undo-ing hack-work
-- Clean/remove comments & leftover code
-- Reduce size of model being sent to client
-- Server-side throttling/security/rate limiting
-- Create distinct endpoints per graph
-- Expand/configure SignalR implementation
-- Consistent logging & exception handling
-- Add visualization features (filtering) & new views/viz
-- New serverless backends (AWS, Azure)
-- Github configurations
-- Theming
+- Front-End
+    - Tests
+    - CSS/styling on graph & page/layout, fix animations
+    - Pause data client when window is inactive
+    - Finish decoupling & abstractions
+    - Optimize data processing/storage
+    - Update store SignalR connection logic
+    - Add error + message display for invalid/error server states
+    - Refactor pages/components into proper abstractions
+    - Add visualization features (eg filtering)
+    - New visualizations
+    - Theming support/CSS refactoring
+- Back-End
+    - Tests
+    - Clean/remove comments & leftover code
+    - Finish decoupling & abstractions
+    - Reduce size of model being sent to client
+    - Server-side throttling/security/rate limiting
+    - Expand/configure SignalR implementation
+    - Consistent logging & exception handling
+    - New serverless backends (AWS, Azure)
+- Config
+    - Github configurations
 
 ## Usage
 
