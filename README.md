@@ -79,7 +79,8 @@ This project contains an example of a C# SignalR hub that reads the top posts fr
     - Finish decoupling & abstractions
     - Reduce size of model being sent to client
     - Server-side throttling/security/rate limiting
-    - Expand/configure SignalR implementation
+    - Expand/configure SignalR implementation, create specific subscribe/unsubscribe endpoints
+    - Update RedditHub to handle token refreshing & error responses
     - Consistent logging & exception handling
     - New serverless backends (AWS, Azure)
 - Config
