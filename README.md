@@ -59,14 +59,22 @@ This project contains an example of a C# SignalR hub that reads the top posts fr
 - [React-Redux](https://github.com/reduxjs/react-redux)
 - [Victory](https://github.com/FormidableLabs/victory)
 
-## TODO/Known Issues:
+## Known Issues
+
+- Incomplete styling/layout
+- Unoptimized data processing - will eventually lag if tab left open
+- Data retrieval and processing still happening while tab is inactive
+- No error messaging shown if app is unable to connect to RedditApi
+- Graph animations bugged
+
+## TODO
 
 - Front-End
     - Tests
     - CSS/styling on graph & page/layout, fix animations
     - Pause data client when window is inactive
     - Finish decoupling & abstractions
-    - Optimize data processing/storage
+    - Optimize data processing/storage, create delta statistics to prevent re-analyzing entire bucket
     - Update store SignalR connection logic
     - Add error + message display for invalid/error server states
     - Refactor pages/components into proper abstractions
@@ -80,7 +88,7 @@ This project contains an example of a C# SignalR hub that reads the top posts fr
     - Reduce size of model being sent to client
     - Server-side throttling/security/rate limiting
     - Expand/configure SignalR implementation, create specific subscribe/unsubscribe endpoints
-    - Update RedditHub to handle token refreshing & error responses
+    - Update RedditApiReader to handle token refreshing & error responses
     - Consistent logging & exception handling
     - New serverless backends (AWS, Azure)
 - Config
