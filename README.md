@@ -1,6 +1,6 @@
 # SignalR Streaming Data Demo
 
-This project contains a demo of a C# SignalR hub that polls new posts and streams the data to a React client which displays charts on various statistics via Victory.
+This work-in-progress project contains a demo of a C# .NET Core application that polls new posts and streams the data via SignalR to a React client, which displays charts on various statistics via Victory.
 
 ## Requirements
 
