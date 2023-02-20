@@ -1,9 +1,24 @@
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using StreamingDemo.Data;
+using StreamingDemo.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
 // builder.Services.AddRazorPages();
+
+builder.Services.AddCors(options =>
+    options.AddPolicy("AllowAll", builder => builder
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+    )
+);
+
+//builder.Services.AddHttpContextAccessor();
+
+//builder.Services.AddControllers();
 
 builder.Services.AddSignalR();
 
@@ -11,6 +26,8 @@ builder.Services.AddSpaStaticFiles(configuration =>
 {
     configuration.RootPath = "wwwroot";
 });
+
+builder.Services.AddSingleton<RedditApiReader>();
 
 var app = builder.Build();
 
@@ -24,12 +41,18 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseSpaStaticFiles();
 
 app.UseRouting();
+//app.UseAuthorization();
 
-app.UseAuthorization();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapHub<RedditHub>("/hub");
+    //endpoints.MapControllers();
+});
 
-app.UseSpaStaticFiles();
+//app.MapControllers();
 
 //app.MapRazorPages();
 
