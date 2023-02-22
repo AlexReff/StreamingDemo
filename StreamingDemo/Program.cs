@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
-using StreamingDemo.Data;
+using StreamingDemo.Data.RedditApi;
 using StreamingDemo.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,7 +27,8 @@ builder.Services.AddSpaStaticFiles(configuration =>
     configuration.RootPath = "wwwroot";
 });
 
-builder.Services.AddSingleton<RedditApiReader>();
+builder.Services.AddSingleton<RedditApiClient>();
+builder.Services.AddSingleton<RedditTokenProvider>();
 
 var app = builder.Build();
 

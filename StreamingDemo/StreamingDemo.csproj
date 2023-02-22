@@ -8,8 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Data\RedditApi\RedditApiReader.cs" />
+    <Compile Remove="Data\RedditApi\RedditApiReader.NewPosts.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="6.0.14" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>

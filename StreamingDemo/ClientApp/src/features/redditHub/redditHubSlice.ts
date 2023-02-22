@@ -38,6 +38,10 @@ export const connectRedditHub = createAsyncThunk<void, string>(
             .configureLogging(LogLevel.Trace)
             .build();
 
+        connection.onclose((error) => {
+            console.log(error);
+        });
+
         connection.on('data', (data) => {
             // console.log(data);
             // Dispatch a Redux action with the received data
@@ -61,8 +65,21 @@ export const connectRedditHub = createAsyncThunk<void, string>(
                 toastId: "Connected"
             });
 
-            //TODO: identify why this fails, finish front end error notification
-            //connection.invoke('GetStatus');
+            // TODO: make this nicer
+            const stream = connection.stream<IRedditApiPostData>('NewPosts');
+
+            // Read data from the stream
+            const reader = stream.subscribe({
+                next: (message) => {
+                    dispatch(redditHubSlice.actions.receiveRedditHubData([message]));
+                },
+                complete: () => {
+                    console.log('Stream completed.');
+                },
+                error: (err) => {
+                    console.error(err);
+                },
+            });
 
             // Dispatch a Redux action to indicate that the connection was successful
             dispatch(redditHubSlice.actions.setRedditHubConnected());
