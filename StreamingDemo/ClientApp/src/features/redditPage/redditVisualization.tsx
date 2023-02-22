@@ -1,134 +1,33 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { VictoryChart, VictoryVoronoiContainer, VictoryGroup, VictoryTooltip, VictoryLine, VictoryScatter, VictoryZoomContainer, VictoryAxis, VictoryBrushContainer, Tuple, DomainTuple, VictoryArea, VictoryStack, VictoryTheme, VictoryBar, VictoryLabel } from 'victory';
-import { useAppSelector } from '../../hooks';
-import { selectRedditInit, selectNumUpdates, selectPostsByTime, selectRedditPosts, selectLastUpdateDate, selectPostCountTimeData } from '../redditHub/redditHubSlice';
-import { IRedditApiPostData } from '../redditHub/redditHubTypes';
+import { selectNewPostStats, selectRedditInit, subscribeToNewPosts, unsubscribeToNewPosts } from '../redditHub/redditHubSlice';
 import styles from './RedditVisualization.module.css';
+import { useAppDispatch } from '../../hooks';
 import redditLogo from './reddit.svg';
 
 interface RedditVisualizationProps {
     //
 }
 
-const statistics = [
-    { name: 'meta', filterFn: (m: IRedditApiPostData) => m.is_meta },
-    { name: 'self', filterFn: (m: IRedditApiPostData) => m.is_self },
-    { name: 'video', filterFn: (m: IRedditApiPostData) => m.is_video },
-    { name: 'over18', filterFn: (m: IRedditApiPostData) => m.over_18 },
-    { name: 'spoiler', filterFn: (m: IRedditApiPostData) => m.spoiler }
-];
-
 export const RedditVisualization: React.FC<RedditVisualizationProps> = ({ }) => {
-    const redditPosts = useSelector(selectRedditPosts);
-    const redditInit = useSelector(selectRedditInit);
-    const numUpdates = useSelector(selectNumUpdates);
-    //const postCountsByTime = useSelector(selectPostCountTimeData);
-    const postsByTime = useSelector(selectPostsByTime);
-    const lastUpdateDate = useSelector(selectLastUpdateDate);
-    // const redditTotals = useSelector(selectRedditTotals);
-    // const redditStringTotals = useSelector(selectRedditStringTotals);
-
-    // const [zoomDomain, setZoomDomain] = useState<{ x?: DomainTuple; y?: DomainTuple }>({ x: [0, 10], y: [0, 110] });
-    // useEffect(() => {
-    //     setZoomDomain({ x: [redditInit, lastUpdateDate] });
-    //     // console.log('updated dates', lastUpdateDate);
-    // }, [lastUpdateDate, redditInit]);
-    //useState({ x: redditInit, y: new Date().getTime() });
-    // const handleZoom = useCallback((domain: { x?: DomainTuple; y?: DomainTuple }) => setZoomDomain(domain), []);
-
-    // const [sortedPostCountData, setSortedPostCountData] = useState<{
-    //     received: number;
-    //     records: IRedditApiPostData[];
-    // }[]>([]);
-
-    /*
+    const dispatch = useAppDispatch();
     useEffect(() => {
-        const result = [];
-        const keys = Object.keys(postsByTime).map(m => +m).sort();
-        for (const key of keys) {
-            result.push({
-                received: key,
-                records: postsByTime[key],
-            });
+        dispatch(subscribeToNewPosts());
+
+        return () => {
+            dispatch(unsubscribeToNewPosts());
         }
-        setSortedPostCountData(result);
-        // console.log('updating posts', sorted);
-    }, [postsByTime]);
+    }, []);
 
-    const getData = useCallback((data: {
-        name: string;
-        filterFn: (m: IRedditApiPostData) => boolean;
-    }) => {
-        const result = sortedPostCountData//Object.entries(sortedPostCountData)
-            //.sort(([a, b]) => +a > +b ? 1 : +a == +b ? 0 : -1)
-            .map((val, i) => {
-                const adjustedTimestamp = Math.floor((val.received - redditInit) / 1000);
-                return {
-                    x: adjustedTimestamp,
-                    y: val.records.filter(data.filterFn).length,
-                };
-            });
-        console.log(result);
-        return result;
-    }, [sortedPostCountData, redditInit]);
-    */
-
-    // const getData = (data: any) => {
-    //     return [
-
-    //     ];
-    // };
+    const newPostStats = useSelector(selectNewPostStats);
 
     const [chartData, setChartData] = React.useState<{ label: string, count: number }[]>([]);
-
     useEffect(() => {
-        // Count the number of occurrences of each label
-        const labelCounts: Record<string, number> = redditPosts.reduce(
-            (acc, { record: { subreddit } }) => ({
-                ...acc,
-                [subreddit]: (acc[subreddit] ?? 0) + 1,
-            }), {} as any);
-
-        // Sort labels by count and take top 10
-        const labels = Object.keys(labelCounts).sort(
-            (a, b) => labelCounts[b] - labelCounts[a]
-        ).slice(0, 10);
-
-        // Prepare data for Victory chart
-        const chartData = labels
-            .map((label) => ({
-                label,
-                count: labelCounts[label],
-            }))
-            .sort((a, b) => a.count > b.count ? 1 : a.count == b.count ? 0 : -1)
-            .reverse();
-
-
-        setChartData(chartData);
-    }, [redditPosts]);
-
-    /*
-    const mostPopularSubreddits = useMemo(() => {
-        const groupedBySubreddit = redditPosts.reduce((acc, obj) => {
-            const { subreddit } = obj.record;
-            if (!acc[subreddit]) {
-                acc[subreddit] = 1;
-            } else {
-                acc[subreddit]++;
-            }
-            return acc;
-        }, {} as Record<string, number>);
-
-        const result = Object.entries(groupedBySubreddit)
-            .sort(([, a], [, b]) => a > b ? 1 : a == b ? 0 : -1)
-            .reverse()
-            .slice(0, 10)
-            .map(([key, cnt]) => key);
-
-        return result;
-    }, [redditPosts]);
-    */
+        let mappedStats = Object.entries(newPostStats.subredditCounts).map(([label, count]) => ({ label, count }));
+        mappedStats.sort((a, b) => b.count - a.count);
+        setChartData(mappedStats.slice(0, 10));
+    }, [newPostStats]);
 
     return (
         <div className={styles.container}>
@@ -176,8 +75,11 @@ export const RedditVisualization: React.FC<RedditVisualizationProps> = ({ }) => 
                         // y={d => redditPosts.filter(item => item.record.subreddit === d.record.subreddit).length}
                         // maxDomain={{ x: 10 }}
                         sortOrder='descending'
-                        sortKey={'count'}
+                        sortKey='count'
                         width={30}
+                        //labels={({ datum }) => datum.count}
+                        // labels={({ count }) => `${count}`}
+                        labels={(ele) => ele.toString()}
                     />
                 </VictoryChart>
             </div>

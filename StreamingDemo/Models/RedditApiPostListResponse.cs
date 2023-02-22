@@ -1,4 +1,6 @@
-﻿namespace StreamingDemo.Models
+﻿using Newtonsoft.Json;
+
+namespace StreamingDemo.Models
 {
     public class RedditApiPostListResponse
     {
@@ -19,41 +21,69 @@
 
     public class RedditApiPostData
     {
-        public string id { get; set; }
         public string subreddit { get; set; }
-        public string subreddit_name_prefixed { get; set; }
-        public string subreddit_type { get; set; }
-        public string title { get; set; }
-        public string name { get; set; }
-        public string url { get; set; }
-        public double upvote_ratio { get; set; }
-        public string selftext { get; set; }
-        public string link_flair_text { get; set; }
         public string thumbnail { get; set; }
         public string domain { get; set; }
-        public string author { get; set; }
-        public string permalink { get; set; }
-        public string author_flair_background_color { get; set; }
-        public object created_utc { get; set; }
-        public object created { get; set; }
-        public int gilded { get; set; }
-        public int score { get; set; }
-        public int ups { get; set; }
-        public int downs { get; set; }
-        public bool clicked { get; set; }
         public bool is_original_content { get; set; }
-        public bool is_created_from_ads_ui { get; set; }
-        public bool is_reddit_media_domain { get; set; }
         public bool is_meta { get; set; }
         public bool is_self { get; set; }
         public bool is_video { get; set; }
         public bool over_18 { get; set; }
         public bool spoiler { get; set; }
+
+        [JsonIgnore]
+        public string id { get; set; }
+        [JsonIgnore]
+        public string subreddit_name_prefixed { get; set; }
+        [JsonIgnore]
+        public string subreddit_type { get; set; }
+        [JsonIgnore]
+        public string title { get; set; }
+        [JsonIgnore]
+        public string name { get; set; }
+        [JsonIgnore]
+        public string url { get; set; }
+        [JsonIgnore]
+        public double upvote_ratio { get; set; }
+        [JsonIgnore]
+        public string selftext { get; set; }
+        [JsonIgnore]
+        public string link_flair_text { get; set; }
+        [JsonIgnore]
+        public string author { get; set; }
+        [JsonIgnore]
+        public string permalink { get; set; }
+        [JsonIgnore]
+        public string author_flair_background_color { get; set; }
+        [JsonIgnore]
+        public object created_utc { get; set; }
+        [JsonIgnore]
+        public object created { get; set; }
+        [JsonIgnore]
+        public int gilded { get; set; }
+        [JsonIgnore]
+        public int score { get; set; }
+        [JsonIgnore]
+        public int ups { get; set; }
+        [JsonIgnore]
+        public int downs { get; set; }
+        [JsonIgnore]
+        public bool clicked { get; set; }
+        [JsonIgnore]
+        public bool is_created_from_ads_ui { get; set; }
+        [JsonIgnore]
+        public bool is_reddit_media_domain { get; set; }
+        [JsonIgnore]
         public bool locked { get; set; }
+        [JsonIgnore]
         public bool author_premium { get; set; }
+        [JsonIgnore]
         public bool archived { get; set; }
+        [JsonIgnore]
         public bool pinned { get; set; }
+        [JsonIgnore]
         public bool contest_mode { get; set; }
+        [JsonIgnore]
         public bool stickied { get; set; }
         /*
         public int dist { get; set; }

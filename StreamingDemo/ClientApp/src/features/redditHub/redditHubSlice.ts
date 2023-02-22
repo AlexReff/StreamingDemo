@@ -1,14 +1,18 @@
-import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
+import { HubConnection, HubConnectionBuilder, IStreamResult, LogLevel } from '@microsoft/signalr';
 import { createAsyncThunk, createSelector, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { RootState } from '../../store';
+import { MessageDataNewPosts, RedditHubChannels, RedditHubMessage, RedditHubMessageType } from './redditHub.worker.types';
 import { IRedditApiPostData } from './redditHubTypes';
 
+const hubWorker = new Worker(new URL('./redditHub.worker.ts', import.meta.url));
+
 export interface RedditHubState {
-    data: {
-        record: IRedditApiPostData,
-        receivedDate: number,
-    }[];
+    newPostStats: {
+        totalCount: number;
+        subredditCounts: Record<string, number>;
+    },
+    lastUpdate: number,
     initDate: number,
     status: 'idle' | 'loading' | 'failed' | 'invalid' | 'disconnected';
 }
@@ -16,7 +20,11 @@ export interface RedditHubState {
 const initNow = new Date();
 
 const initialState: RedditHubState = {
-    data: [],
+    newPostStats: {
+        totalCount: 0,
+        subredditCounts: {},
+    },
+    lastUpdate: 0,
     initDate: initNow.getTime(),
     status: 'disconnected',
 };
@@ -31,47 +39,35 @@ let connection: HubConnection | null = null;
 export const connectRedditHub = createAsyncThunk<void, string>(
     'redditHub/connectAction',
     async (url, { dispatch }) => {
-        console.log("CONNECTING TO HUB");
-        connection = new HubConnectionBuilder()
-            .withUrl(url)
-            .withAutomaticReconnect()
-            .configureLogging(LogLevel.Trace)
-            .build();
+        hubWorker.onmessage = (messageString: MessageEvent<string>) => {
+            let message: RedditHubMessage | null = null;
+            try {
+                message = JSON.parse(messageString.data);
+            } catch (ex) {
+                //
+            }
+            if (message == null) {
+                return;
+            }
+            switch (message.messageType) {
+                case RedditHubMessageType.Connected:
+                    dispatch(setConnected(true));
+                    break;
+                case RedditHubMessageType.Data:
+                    switch ((message as MessageDataNewPosts).dataType) {
+                        case RedditHubChannels.NewPosts:
+                            dispatch(receiveNewPosts((message as MessageDataNewPosts).data));
+                            break;
+                        default:
+                            return;
+                    }
+                    break;
+                default:
+                    return;
+            }
+        };
 
-        connection.on('data', (data) => {
-            // console.log(data);
-            // Dispatch a Redux action with the received data
-            dispatch(redditHubSlice.actions.receiveRedditHubData(data));
-        });
-
-        connection.on('error', (errorMessage) => {
-            console.error(errorMessage);
-            //dispatch(setRedditHubError(errorMessage));
-        });
-
-        connection.on('config', (configMessage: 'success' | 'error' | 'empty') => {
-            // console.error(configMessage);
-            dispatch(redditHubSlice.actions.receiveRedditHubConfig(configMessage));
-        });
-
-        try {
-            await connection.start();
-
-            toast("Connected", {
-                toastId: "Connected"
-            });
-
-            //TODO: identify why this fails, finish front end error notification
-            //connection.invoke('GetStatus');
-
-            // Dispatch a Redux action to indicate that the connection was successful
-            dispatch(redditHubSlice.actions.setRedditHubConnected());
-
-
-        } catch (reason) {
-            console.error(reason);
-            // dispatch(setRedditHubError(reason.toString()));
-        }
+        hubWorker.postMessage(JSON.stringify({ messageType: RedditHubMessageType.Connect, url }));
     }
 );
 
@@ -83,38 +79,42 @@ export const redditHubSlice = createSlice({
         // Redux Toolkit allows us to write "mutating" logic in reducers. It
         // doesn't actually mutate the state because it uses the Immer library,
         // which detects changes to a "draft state" and produces a brand new
-        // immutable state based off those changes  
+        // immutable state based off those changes
         redditHubDisconnect: (state) => {
+            console.log("disconnect requested");
             if (state.status != 'idle' || connection == null) {
                 return;
             }
 
-            state.status = 'disconnected';
+            hubWorker.postMessage(JSON.stringify({ messageType: RedditHubMessageType.Disconnect }));
 
-            const stopRequest = connection.stop();
-            stopRequest.finally(() => {
-                connection = null;
+            setConnected(false);
+        },
+        setConnected: (state, action: PayloadAction<boolean>) => {
+            if (action.payload) {
+                state.status = 'idle';
+                toast("Connected", {
+                    toastId: "connect"
+                });
+            } else {
+                state.status = 'disconnected';
                 toast("Disconnected", {
                     toastId: "disconnect"
                 });
-            });
+            }
         },
-        receiveRedditHubData: (state, action: PayloadAction<IRedditApiPostData[]>) => {
-            //state.data = state.data.concat(action.payload);
-
-            if (action == null || action.payload == null || action.payload.length === 0) {
+        receiveNewPosts: (state, action: PayloadAction<IRedditApiPostData[]>) => {
+            if (action.payload == null || action.payload.length == 0) {
                 return;
             }
 
-            const localNow = new Date();
+            state.lastUpdate = new Date().getTime();
 
-            const datedElements = action.payload.map((record) => ({
-                receivedDate: localNow.getTime(),
-                record,
-            }));
+            state.newPostStats.totalCount += action.payload.length;
 
-            state.data.push(...datedElements);
-            state.status = 'idle';
+            for (const post of action.payload) {
+                state.newPostStats.subredditCounts[post.subreddit] = (state.newPostStats.subredditCounts[post.subreddit] ?? 0) + 1;
+            }
         },
         receiveRedditHubConfig: (state, action: PayloadAction<'success' | 'error' | 'empty'>) => {
             switch (action.payload) {
@@ -131,58 +131,41 @@ export const redditHubSlice = createSlice({
                     break;
             }
         },
-        setRedditHubConnected(state) {
-            state.status = 'idle';
-        },
-        setRedditHubError(state, action: PayloadAction<string>) {
+        setRedditHubError: (state, action: PayloadAction<string>) => {
             // state.isConnected = false;
             // state.error = action.payload;
+        },
+        subscribeToNewPosts: (state) => {
+            console.log("subscribing to new posts");
+            hubWorker.postMessage(JSON.stringify({
+                messageType: RedditHubMessageType.Subscribe,
+                channel: RedditHubChannels.NewPosts,
+            }));
+        },
+        unsubscribeToNewPosts: (state) => {
+            hubWorker.postMessage(JSON.stringify({
+                messageType: RedditHubMessageType.Subscribe,
+                channel: RedditHubChannels.NewPosts,
+            }));
         },
     },
     // The `extraReducers` field lets the slice handle actions defined elsewhere,
     // including actions generated by createAsyncThunk or in other slices.
     extraReducers: (builder) => builder
-        .addCase(connectRedditHub.fulfilled, (state) => {
-            //state.connection = connection;
-        })
-        .addCase(connectRedditHub.rejected, (state, action) => {
-            // state.connection = null;
-            // state.error = action.payload as string;
-        }),
+    // .addCase(connectRedditHub.fulfilled, (state) => {
+    //     //state.connection = connection;
+    // })
+    // .addCase(connectRedditHub.rejected, (state, action) => {
+    //     // state.connection = null;
+    //     // state.error = action.payload as string;
+    // }),
 });
 
-export const { redditHubDisconnect, receiveRedditHubConfig, receiveRedditHubData } = redditHubSlice.actions;
+export const { redditHubDisconnect, setConnected, receiveNewPosts, subscribeToNewPosts, unsubscribeToNewPosts } = redditHubSlice.actions;
 
 export const selectStatus = (state: RootState) => state.redditHub.status;
-export const selectRedditPosts = (state: RootState) => state.redditHub.data;
 export const selectRedditInit = (state: RootState) => state.redditHub.initDate;
-
-export const selectPostsByTime = createSelector(
-    selectRedditPosts,
-    (records) => records.reduce((acc, { record, receivedDate }) => {
-        const posts = acc[receivedDate] || [];
-        posts.push(record);
-        acc[receivedDate] = posts;
-        return acc;
-    }, {} as Record<number, IRedditApiPostData[]>)
-);
-
-export const selectPostCountTimeData = createSelector(
-    selectPostsByTime,
-    (records) => Object.entries(records).map(([timestamp, posts]) => ({
-        timestamp: Number(timestamp),
-        postCount: posts.length,
-    }))
-);
-
-export const selectLastUpdateDate = createSelector(
-    selectPostsByTime,
-    (records) => Math.max(...Object.keys(records).map((val) => +val))
-);
-
-export const selectNumUpdates = createSelector(
-    selectPostsByTime,
-    (records) => Object.keys(records).length
-);
+export const selectLastUpdate = (state: RootState) => state.redditHub.lastUpdate;
+export const selectNewPostStats = (state: RootState) => state.redditHub.newPostStats;
 
 export default redditHubSlice.reducer;

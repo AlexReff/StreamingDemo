@@ -3,10 +3,10 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { ColorRing } from 'react-loader-spinner';
 import { connectRedditHub, redditHubDisconnect, selectStatus } from '../redditHub/redditHubSlice';
 import { RedditPage } from '../redditPage/redditPage';
-import { useAppDispatch, useAppSelector } from '../../hooks';
 import styles from './Home.module.css';
 import classNames from 'classnames';
 import { useTransition } from 'transition-hook';
+import { useSelector } from 'react-redux';
 
 interface HomeProps {
     //
@@ -14,7 +14,7 @@ interface HomeProps {
 
 // connects the app to SignalR and displays the visualization page
 export const Home: React.FC<HomeProps & RouteComponentProps> = ({ }) => {
-    const status = useAppSelector(selectStatus);
+    const status = useSelector(selectStatus);
 
     //transition animation hooks
     const { stage: stageSpinner, shouldMount: shouldMountSpinner } = useTransition(status == 'disconnected', 1000);
