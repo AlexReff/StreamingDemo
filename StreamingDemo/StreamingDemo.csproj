@@ -6,12 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>8cb0be31-704b-44ec-b83e-f9e91359ac3e</UserSecretsId>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Data\RedditApi\RedditApiReader.cs" />
-    <Compile Remove="Data\RedditApi\RedditApiReader.NewPosts.cs" />
-  </ItemGroup>
-
+	
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="6.0.14" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
