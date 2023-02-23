@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33403.182
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StreamingDemo", "StreamingDemo\StreamingDemo.csproj", "{DE4B5EF3-30FD-4F81-9392-19ED5739FC6F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StreamingDemo", "StreamingDemo\StreamingDemo.csproj", "{DE4B5EF3-30FD-4F81-9392-19ED5739FC6F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StreamingDemo.Tests", "StreamingDemoTests\StreamingDemo.Tests.csproj", "{2203B2ED-4F43-4E27-8D76-E93B11B9768D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{DE4B5EF3-30FD-4F81-9392-19ED5739FC6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE4B5EF3-30FD-4F81-9392-19ED5739FC6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE4B5EF3-30FD-4F81-9392-19ED5739FC6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2203B2ED-4F43-4E27-8D76-E93B11B9768D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2203B2ED-4F43-4E27-8D76-E93B11B9768D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2203B2ED-4F43-4E27-8D76-E93B11B9768D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2203B2ED-4F43-4E27-8D76-E93B11B9768D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

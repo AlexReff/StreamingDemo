@@ -17,8 +17,6 @@ namespace StreamingDemo.Hubs
         private readonly ILogger<RedditHub> _logger;
         private readonly RedditApiClient _redditApi;
 
-
-
         public RedditHub(ILogger<RedditHub> logger, RedditApiClient RedditApiClient)
         {
             _logger = logger;
