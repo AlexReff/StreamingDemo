@@ -2,3 +2,5 @@
 StreamingDemo/obj/
 StreamingDemo/bin/Debug
 StreamingDemo/wwwroot
+StreamingDemoTests/obj
+StreamingDemoTests/bin/Debug
