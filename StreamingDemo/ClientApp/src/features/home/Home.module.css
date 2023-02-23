@@ -13,16 +13,16 @@
     top: 40px;
 }
 
+.redditPageWrapper {
+    
+}
+/*
 .loadingSpinnerEnter {
     opacity: 1;
     transform: translateY(0%);
 }
 
-.redditPageWrapper {
-    transition: 1s ease all;
-    opacity: 0;
-}
-
 .redditPageWrapperEnter {
     opacity: 1;
 }
+*/

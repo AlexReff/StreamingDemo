@@ -6,6 +6,7 @@ import { NoMatch } from '../routes/noMatch';
 import { Home } from '../features/home/home';
 
 import 'react-toastify/dist/ReactToastify.css';
+import '@fontsource/roboto/400.css';
 
 import './App.css';
 

@@ -1,28 +1,49 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { VictoryChart, VictoryVoronoiContainer, VictoryGroup, VictoryTooltip, VictoryLine, VictoryScatter, VictoryZoomContainer, VictoryAxis, VictoryBrushContainer, Tuple, DomainTuple, VictoryArea, VictoryStack, VictoryTheme, VictoryBar, VictoryLabel } from 'victory';
-import { selectNewPostStats, selectRedditInit, subscribeToNewPosts, unsubscribeToNewPosts } from '../redditHub/redditHubSlice';
+import { selectNewPostStats, selectRedditInit, selectStatus, subscribeToNewPosts, unsubscribeToNewPosts } from '../redditHub/redditHubSlice';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { RedditPageState } from './redditPageSlice';
 import styles from './RedditVisualization.module.css';
-import { useAppDispatch } from '../../hooks';
 import redditLogo from './reddit.svg';
 
 interface RedditVisualizationProps {
-    //
+    pageState: RedditPageState;
 }
 
-export const RedditVisualization: React.FC<RedditVisualizationProps> = ({ }) => {
+export const RedditVisualization: React.FC<RedditVisualizationProps> = ({ pageState }) => {
     const dispatch = useAppDispatch();
+    const apiStatus = useAppSelector(selectStatus);
+
     useEffect(() => {
-        dispatch(subscribeToNewPosts());
+        if (apiStatus != 'idle') {
+            return;
+        }
+
+        if (!document.hidden) {
+            dispatch(subscribeToNewPosts());
+        }
+
+        const visibilityChangeHandler = (ev: Event) => {
+            if (document.hidden) {
+                dispatch(unsubscribeToNewPosts());
+            } else {
+                dispatch(subscribeToNewPosts());
+            }
+        };
+
+        document.addEventListener("visibilitychange", visibilityChangeHandler);
 
         return () => {
+            document.removeEventListener("visibilitychange", visibilityChangeHandler);
             dispatch(unsubscribeToNewPosts());
-        }
-    }, []);
+        };
+    }, [apiStatus]);
 
     const newPostStats = useSelector(selectNewPostStats);
 
     const [chartData, setChartData] = React.useState<{ label: string, count: number }[]>([]);
+
     useEffect(() => {
         let mappedStats = Object.entries(newPostStats.subredditCounts).map(([label, count]) => ({ label, count }));
         mappedStats.sort((a, b) => b.count - a.count);
@@ -36,50 +57,55 @@ export const RedditVisualization: React.FC<RedditVisualizationProps> = ({ }) => 
                     width={1400}
                     height={900}
                     domainPadding={50}
-                    animate={{ duration: 500 }}
+                    // animate={{ duration: 500 }}
                     style={{
                         background: {
-                            fill: '#cecece',
+                            //fill: '#DEDEDE',
+                            fill: 'transparent',
                         },
                     }}
                 >
                     <VictoryAxis dependentAxis
                         style={{
-                            axis: {
-                                stroke: 'white'
-                            },
-                            tickLabels: {
-                                fill: 'white'
-                            },
+                            // axis: {
+                            //     stroke: 'white'
+                            // },
+                            // tickLabels: {
+                            //     fill: 'white'
+                            // },
                         }} />
                     <VictoryAxis
                         tickValues={chartData.map(({ label }) => label)}
-                        axisLabelComponent={<VictoryLabel dy={12} />}
-                        label='subreddit'
+                        axisLabelComponent={<VictoryLabel dy={15} />}
+                        tickLabelComponent={<VictoryLabel angle={15} />}
+                        // label='subreddit'
                         style={{
                             axis: {
-                                stroke: 'white'
+                                // stroke: 'white'
                             },
                             tickLabels: {
-                                fill: 'white'
+                                // fill: 'white',
+                                fontSize: '12px',
                             },
                             axisLabel: {
                                 padding: 20,
-                                fill: 'white'
+                                // fill: 'white'
                             }
                         }} />
                     <VictoryBar data={chartData}
                         x='label'
                         y='count'
-                        // x='subreddit'
-                        // y={d => redditPosts.filter(item => item.record.subreddit === d.record.subreddit).length}
-                        // maxDomain={{ x: 10 }}
-                        sortOrder='descending'
-                        sortKey='count'
+                        // sortOrder='descending'
+                        // sortKey='count'
                         width={30}
+                        // key='label'
+                        // style={{
+                        //     labels: {
+                        //         color: "#0F0",
+                        //     },
+                        // }}
                         //labels={({ datum }) => datum.count}
-                        // labels={({ count }) => `${count}`}
-                        labels={(ele) => ele.toString()}
+                        //labelComponent={<VictoryLabel  />}
                     />
                 </VictoryChart>
             </div>

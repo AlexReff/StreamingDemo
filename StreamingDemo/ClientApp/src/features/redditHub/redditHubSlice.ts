@@ -81,7 +81,6 @@ export const redditHubSlice = createSlice({
         // which detects changes to a "draft state" and produces a brand new
         // immutable state based off those changes
         redditHubDisconnect: (state) => {
-            console.log("disconnect requested");
             if (state.status != 'idle' || connection == null) {
                 return;
             }
@@ -93,14 +92,14 @@ export const redditHubSlice = createSlice({
         setConnected: (state, action: PayloadAction<boolean>) => {
             if (action.payload) {
                 state.status = 'idle';
-                toast("Connected", {
-                    toastId: "connect"
-                });
+                // toast("Connected", {
+                //     toastId: "connect"
+                // });
             } else {
                 state.status = 'disconnected';
-                toast("Disconnected", {
-                    toastId: "disconnect"
-                });
+                // toast("Disconnected", {
+                //     toastId: "disconnect"
+                // });
             }
         },
         receiveNewPosts: (state, action: PayloadAction<IRedditApiPostData[]>) => {
@@ -136,7 +135,6 @@ export const redditHubSlice = createSlice({
             // state.error = action.payload;
         },
         subscribeToNewPosts: (state) => {
-            console.log("subscribing to new posts");
             hubWorker.postMessage(JSON.stringify({
                 messageType: RedditHubMessageType.Subscribe,
                 channel: RedditHubChannels.NewPosts,

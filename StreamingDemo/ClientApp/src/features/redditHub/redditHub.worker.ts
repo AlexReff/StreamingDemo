@@ -1,4 +1,4 @@
-import { HubConnection, HubConnectionBuilder, LogLevel, ISubscription } from "@microsoft/signalr";
+import { HubConnection, HubConnectionBuilder, LogLevel, ISubscription, HubConnectionState } from "@microsoft/signalr";
 import { IntervalFuncCaller } from "../utillity/helpers";
 import { RedditHubChannels, RedditHubMessage, RedditHubMessageType, MessageError, MessageConnect, MessageSubscribe } from "./redditHub.worker.types";
 import { IRedditApiPostData } from "./redditHubTypes";
@@ -35,12 +35,12 @@ self.onmessage = (messageString: MessageEvent<string>) => {
             break;
         case RedditHubMessageType.Subscribe:
             subscribe((message as MessageSubscribe).channel).then(() => {
-                console.log("Worker Subscribed", message);
+                // console.log("Worker Subscribed", message);
             });
             break;
         case RedditHubMessageType.Unsubscribe:
             unsubscribe((message as MessageSubscribe).channel).then(() => {
-                console.log("Worker Unsubscribed", message);
+                // console.log("Worker Unsubscribed", message);
             });
             break;
         default:
@@ -94,17 +94,12 @@ const connect = async (url: string) => {
         // console.error(configMessage);
         //dispatch(redditHubSlice.actions.receiveRedditHubConfig(configMessage));
     });
-    connection.on('data', (data) => {
-        // console.log(data);
-        // Dispatch a Redux action with the received data
-        dispatch(redditHubSlice.actions.receiveRedditHubData(data));
-    });
     */
 
     try {
-        await connection.start();
-
-        post(JSON.stringify({ messageType: RedditHubMessageType.Connected }));
+        await connection.start().then(() => {
+            post(JSON.stringify({ messageType: RedditHubMessageType.Connected }));
+        });
     } catch (reason) {
         console.error(reason);
         throw reason;
@@ -131,7 +126,7 @@ const subscribe = async (channel: RedditHubChannels) => {
 };
 
 const subscribeNewPosts = async () => {
-    if (connection == null) {
+    if (connection == null || connection.state != HubConnectionState.Connected) {
         throw new Error("Subscribe called while not Connected");
     }
     if (newPostReader != null) {
