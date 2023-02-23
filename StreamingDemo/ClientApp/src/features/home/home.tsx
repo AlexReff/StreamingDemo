@@ -17,12 +17,12 @@ export const Home: React.FC<HomeProps & RouteComponentProps> = ({ }) => {
     const status = useSelector(selectStatus);
 
     //transition animation hooks
-    const { stage: stageSpinner, shouldMount: shouldMountSpinner } = useTransition(status == 'disconnected', 1000);
-    const { stage: stagePage, shouldMount: shouldMountPage } = useTransition(status == 'idle', 1000);
+    // const { stage: stageSpinner, shouldMount: shouldMountSpinner } = useTransition(status == 'disconnected', 1000);
+    // const { stage: stagePage, shouldMount: shouldMountPage } = useTransition(status == 'idle', 1000);
 
     return (
         <div>
-            {shouldMountSpinner && (
+            {/* {shouldMountSpinner && (
                 <div className={styles.loadingSpinnerWrapper}>
                     <ColorRing
                         visible={true}
@@ -37,15 +37,13 @@ export const Home: React.FC<HomeProps & RouteComponentProps> = ({ }) => {
                         colors={['#D61355', '#F94A29', '#FCE22A', '#30E3DF', '#301E67']}
                     />
                 </div>
-            )}
-            {shouldMountPage && (
-                <div className={classNames({
-                    [styles.redditPageWrapper]: true,
-                    [styles.redditPageWrapperEnter]: stagePage == 'enter',
-                })}>
-                    <RedditPage />
-                </div>
-            )}
+            )} */}
+            <div className={classNames({
+                [styles.redditPageWrapper]: true,
+                //[styles.redditPageWrapperEnter]: stagePage == 'enter',
+            })}>
+                <RedditPage />
+            </div>
         </div>
     );
 };

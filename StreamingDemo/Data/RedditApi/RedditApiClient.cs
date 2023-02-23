@@ -1,28 +1,18 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using StreamingDemo.Models;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Channels;
-
+﻿
 namespace StreamingDemo.Data.RedditApi
 {
-    public class RedditApiClient : HttpClient
+    public partial class RedditApiClient : HttpClient
     {
         private HttpClient _httpClient;
 
         private readonly ILogger<RedditApiClient> _logger;
-        private readonly RateLimiter _rateLimiter;
 
         private readonly string _redditAppId;
         private readonly string _redditAppSecret;
 
-        private readonly IntervalFuncCaller<IEnumerable<RedditApiPostData>> _newPostInterval;
+        private DateTime _lastRequestTime;
 
-        private bool _newPostsRunning;
-        private readonly Channel<RedditApiPostData> _newPostsChannel;
-        public ChannelReader<RedditApiPostData> NewPosts => _newPostsChannel.Reader;
-
-        public RedditApiClient(IConfiguration config, ILogger<RedditApiClient> logger, RedditTokenProvider tokenProvider)
+        public RedditApiClient(IConfiguration config, ILogger<RedditApiClient> logger, RedditTokenProvider tokenProvider) : this()
         {
             _logger = logger;
 
@@ -33,54 +23,25 @@ namespace StreamingDemo.Data.RedditApi
             _httpClient.BaseAddress = new Uri("https://oauth.reddit.com");
             _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(config["Reddit:UserAgent"]);
 
-            _rateLimiter = new RateLimiter(60, TimeSpan.FromMinutes(1));
-
-            _newPostsChannel = Channel.CreateUnbounded<RedditApiPostData>();
-            _newPostInterval = new IntervalFuncCaller<IEnumerable<RedditApiPostData>>(GetNewPosts, 1, WriteNewPosts);
+            _lastRequestTime = DateTime.UtcNow;
         }
 
-        public void StartNewPosts()
+        private async Task AwaitHttpRequestLimit()
         {
-            if (!_newPostsRunning)
+            while (true)
             {
-                _newPostsRunning = true;
-                _newPostInterval.Start();
-            }
-        }
+                var elapsedSeconds = (DateTime.UtcNow - _lastRequestTime).TotalSeconds;
+                var secondsPerRequest = 1.0;
 
-        public async Task<IEnumerable<RedditApiPostData>> GetNewPosts()
-        {
-            try
-            {
-                var response = await _rateLimiter.ExecuteAsync(async () =>
+                if (elapsedSeconds >= secondsPerRequest)
                 {
-                    return await _httpClient.GetAsync("/r/all/new?limit=100");
-                });
-
-                response.EnsureSuccessStatusCode();
-
-                var content = await response.Content.ReadFromJsonAsync<RedditApiPostListResponse>();
-
-                if (content?.data?.children?.Count() > 0)
-                {
-                    return content.data.children.Select(m => m.data);
+                    _lastRequestTime = DateTime.UtcNow;
+                    break;
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "GetNewPosts - Unable to retrieve new posts");
-                throw;
-            }
 
-            return Enumerable.Empty<RedditApiPostData>();
-        }
-
-        public async Task WriteNewPosts(IEnumerable<RedditApiPostData> postData)
-        {
-            Parallel.ForEach(postData, post =>
-            {
-                _newPostsChannel.Writer.TryWrite(post);
-            });
+                var timeToWait = TimeSpan.FromSeconds(secondsPerRequest - elapsedSeconds);
+                await Task.Delay(timeToWait);
+            }
         }
     }
 }

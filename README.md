@@ -62,35 +62,25 @@ This work-in-progress project contains a demo of a C# .NET Core application that
 ## Known Issues
 
 - Incomplete styling/layout
-- Graph animations bugged
-- Unoptimized data processing - slows down the longer the tab is alive
-- Data retrieval and processing still happening while tab is inactive
-- Front-end silently fails if Api backend fails
-- Access token will eventually expire
+- Some browser extensions, such as `uMatrix`, will prevent the web worker from starting when running the project locally
+- Visual Studio may display errors for `postMessage` calls in the worker. This is due to VS using an older version of Typescript and can be safely ignored.
 
 ## TODO
 
 - Front-End
     - Tests
     - CSS/styling on graph & page/layout, fix animations
-    - Pause data client when window is inactive
     - Finish decoupling & abstractions
-    - Optimize data processing/storage, create delta statistics to prevent re-analyzing entire bucket
-    - Update store SignalR connection logic
     - Add error + message display for invalid/error server states
-    - Refactor pages/components into proper abstractions
+    - Refactor pages/components into proper abstractions + layout
     - Add visualization features (eg filtering)
-    - New visualizations
+    - New visualizations/statistics
     - Theming support/CSS refactoring
+    - Add ability to view previous stat states (redux undo/redo)
 - Back-End
     - Tests
     - Clean/remove comments & leftover code
     - Finish decoupling & abstractions
-    - Reduce size of model being sent to client
-    - Server-side throttling/security/rate limiting
-    - Expand/configure SignalR implementation, create specific subscribe/unsubscribe endpoints
-    - Update RedditApiReader to handle token refreshing & error responses
-    - Consistent logging & exception handling
     - New serverless backends (AWS, Azure)
 - Config
     - Github configurations & production-ready branch management

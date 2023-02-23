@@ -78,7 +78,7 @@
             }
             catch (Exception ex)
             {
-                //TODO: handle exception
+                throw;
             }
             finally
             {
@@ -88,7 +88,6 @@
                 }
             }
         }
-
 
         public void Dispose()
         {

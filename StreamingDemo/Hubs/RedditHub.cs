@@ -17,8 +17,6 @@ namespace StreamingDemo.Hubs
         private readonly ILogger<RedditHub> _logger;
         private readonly RedditApiClient _redditApi;
 
-
-
         public RedditHub(ILogger<RedditHub> logger, RedditApiClient RedditApiClient)
         {
             _logger = logger;
@@ -29,16 +27,6 @@ namespace StreamingDemo.Hubs
         {
             _redditApi.StartNewPosts();
             return _redditApi.NewPosts;
-        }
-
-        public override async Task OnDisconnectedAsync(Exception? exception)
-        {
-            if (exception != null)
-            {
-                _logger.LogError(exception, $"RedditHub::OnDisconnectedAsync Exception: {exception.Message}");
-            }
-
-            await base.OnDisconnectedAsync(exception);
         }
     }
 }

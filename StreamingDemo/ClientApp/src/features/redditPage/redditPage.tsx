@@ -4,14 +4,20 @@ import redditLogo from "./reddit.svg";
 import { RedditSidebar } from "./redditSidebar";
 import redditPageSlice, { initialState } from "./redditPageSlice";
 import styles from './RedditPage.module.css';
+import classNames from "classnames";
+import { useAppSelector } from "../../hooks";
+import { selectStatus } from "../redditHub/redditHubSlice";
+import { Oval } from "react-loader-spinner";
+import { Alert } from "@mui/material";
+import FilterTiltShiftIcon from '@mui/icons-material/FilterTiltShift';
 
 interface RedditPageProps {
     //
 }
 
 export const RedditPage: React.FC<RedditPageProps> = ({ }) => {
+    const connectionStatus = useAppSelector(selectStatus);
     const [reducerState, dispatch] = useReducer(redditPageSlice, initialState);
-    const now = useMemo(() => new Date(), []);
     return (
         <div className={styles.container}>
             <div className={styles.wrapper}>
@@ -36,11 +42,11 @@ export const RedditPage: React.FC<RedditPageProps> = ({ }) => {
                     {/* 
                     <div className={styles.sidebar}>
                         <RedditSidebar />
-                    </div>
-                     */}
+                    </div> 
+                    */}
                     <div className={styles.content}>
                         <div>
-                            <RedditVisualization />
+                            <RedditVisualization pageState={reducerState} />
                         </div>
                         <div>
                             <h1>Streaming new posts, grouped by subreddit</h1>
@@ -50,7 +56,19 @@ export const RedditPage: React.FC<RedditPageProps> = ({ }) => {
                     </div>
                 </div>
                 <div className={styles.footer}>
-                    <div>DEVELOPMENT</div>
+                    <div>
+                        {connectionStatus == 'idle' && (
+                            <Alert severity="success">Connected</Alert>
+                        )}
+                        {(connectionStatus == 'loading' || connectionStatus == 'disconnected') && (
+                            <Alert severity="warning" icon={<FilterTiltShiftIcon />}>
+                                Connecting...
+                            </Alert>
+                        )}
+                        {connectionStatus == 'failed' && (
+                            <Alert severity="error">Unable to Connect</Alert>
+                        )}
+                    </div>
                     <div>Creative Commons Attribution 4.0 International Public License</div>
                     <div>alex@reff.dev</div>
                 </div>

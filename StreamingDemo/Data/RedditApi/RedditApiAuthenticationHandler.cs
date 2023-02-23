@@ -9,9 +9,6 @@ namespace StreamingDemo.Data.RedditApi
     {
         private readonly RedditTokenProvider _tokenProvider;
 
-        private readonly string _redditAppId;
-        private readonly string _redditAppSecret;
-
         private RedditAccessTokenResponse? _redditAccessToken;
 
         public RedditApiAuthenticationHandler(string appId, string appSecret, RedditTokenProvider tokenProvider) : base(new HttpClientHandler())
@@ -25,8 +22,6 @@ namespace StreamingDemo.Data.RedditApi
                 throw new ArgumentNullException(nameof(appSecret));
             }
 
-            _redditAppId = appId;
-            _redditAppSecret = appSecret;
             _tokenProvider = tokenProvider;
 
             _tokenProvider.SetCredentials(appId, appSecret);
