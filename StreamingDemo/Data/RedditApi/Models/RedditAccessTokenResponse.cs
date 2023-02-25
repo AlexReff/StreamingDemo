@@ -1,4 +1,4 @@
-﻿namespace StreamingDemo.Models
+﻿namespace StreamingDemo.Data.RedditApi.Models
 {
     public class RedditAccessTokenResponse
     {

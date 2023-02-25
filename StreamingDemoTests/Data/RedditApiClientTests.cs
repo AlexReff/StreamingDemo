@@ -1,6 +1,6 @@
 namespace StreamingDemo.Tests.Data
 {
-    public class RedditApiReaderTests
+    public class RedditApiClientTests
     {
         [Fact]
         public void Test1()

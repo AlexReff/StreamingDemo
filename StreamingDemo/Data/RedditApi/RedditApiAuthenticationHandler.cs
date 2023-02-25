@@ -1,41 +1,42 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http;
-using StreamingDemo.Models;
 using System.Text;
+using StreamingDemo.Data.RedditApi.Models;
+using StreamingDemo.Data.RedditApi.Interfaces;
+using System.Threading;
 
 namespace StreamingDemo.Data.RedditApi
 {
     public class RedditApiAuthenticationHandler : DelegatingHandler
     {
-        private readonly RedditTokenProvider _tokenProvider;
+        private IAccessToken? _accessToken;
 
-        private RedditAccessTokenResponse? _redditAccessToken;
+        private readonly IRedditTokenProvider _tokenProvider;
 
-        public RedditApiAuthenticationHandler(string appId, string appSecret, RedditTokenProvider tokenProvider) : base(new HttpClientHandler())
+        public RedditApiAuthenticationHandler(IRedditTokenProvider tokenProvider)
         {
-            if (string.IsNullOrEmpty(appId))
-            {
-                throw new ArgumentNullException(nameof(appId));
-            }
-            if (string.IsNullOrEmpty(appSecret))
-            {
-                throw new ArgumentNullException(nameof(appSecret));
-            }
-
             _tokenProvider = tokenProvider;
-
-            _tokenProvider.SetCredentials(appId, appSecret);
+            _accessToken = null;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            if (_redditAccessToken == null || string.IsNullOrEmpty(_redditAccessToken.access_token))
+            if (_accessToken == null)
             {
-                _redditAccessToken = await _tokenProvider.GetTokenAsync();
+                _accessToken = await _tokenProvider.GetTokenAsync(true);
             }
+            if (string.IsNullOrEmpty(_accessToken.Token))
+            {
+                _accessToken = await _tokenProvider.GetTokenAsync(true);
+            }
+            if (string.IsNullOrEmpty(_accessToken.Token))
+            {
+                throw new Exception("Unable to retrieve AccessToken");
+            }
+
             if (!request.Headers.Contains("Authorization"))
             {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _redditAccessToken.access_token);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken.Token);
             }
 
             var response = await base.SendAsync(request, cancellationToken);
@@ -44,14 +45,14 @@ namespace StreamingDemo.Data.RedditApi
             {
                 var token = await _tokenProvider.GetTokenAsync(true);
 
-                if (string.IsNullOrWhiteSpace(token.access_token))
+                if (string.IsNullOrWhiteSpace(token.Token))
                 {
                     return response;
                 }
                 
-                _redditAccessToken = token;
+                _accessToken = token;
 
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _redditAccessToken.access_token);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken.Token);
                 response = await base.SendAsync(request, cancellationToken);
             }
 

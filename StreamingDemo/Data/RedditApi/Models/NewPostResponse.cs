@@ -1,25 +1,25 @@
 ﻿using Newtonsoft.Json;
 
-namespace StreamingDemo.Models
+namespace StreamingDemo.Data.RedditApi.Models
 {
-    public class RedditApiPostListResponse
+    public class NewPostResponse
     {
         public string kind { get; set; }
-        public RedditApiNewData data { get; set; }
+        public NewData data { get; set; }
     }
 
-    public class RedditApiNewData
+    public class NewData
     {
-        public IEnumerable<RedditApiPostListEntry> children { get; set; }
+        public IEnumerable<PostListEntry> children { get; set; }
     }
 
-    public class RedditApiPostListEntry
+    public class PostListEntry
     {
         public string kind { get; set; }
-        public RedditApiPostData data { get; set; }
+        public PostData data { get; set; }
     }
 
-    public class RedditApiPostData
+    public class PostData
     {
         public string subreddit { get; set; }
         public string thumbnail { get; set; }

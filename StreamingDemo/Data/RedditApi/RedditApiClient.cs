@@ -1,47 +1,94 @@
-﻿
+﻿using StreamingDemo.Data.RedditApi.Interfaces;
+using StreamingDemo.Data.RedditApi.Models;
+using System.Threading.Channels;
+
 namespace StreamingDemo.Data.RedditApi
 {
-    public partial class RedditApiClient : HttpClient
+    public class RedditApiClient : IRedditApiClient
     {
-        private HttpClient _httpClient;
-
+        private IRedditHttpClient _httpClient;
         private readonly ILogger<RedditApiClient> _logger;
 
-        private readonly string _redditAppId;
-        private readonly string _redditAppSecret;
+        //New Posts
+        private readonly IntervalFuncCaller<IEnumerable<PostData>> _newPostInterval;
+        private readonly Channel<PostData> _newPostsChannel;
 
-        private DateTime _lastRequestTime;
+        private readonly object _newPostsLock = new object();
+        private bool _newPostsRunning;
 
-        public RedditApiClient(IConfiguration config, ILogger<RedditApiClient> logger, RedditTokenProvider tokenProvider) : this()
+        public ChannelReader<PostData> NewPosts => _newPostsChannel.Reader;
+        public bool NewPostsActive => _newPostsRunning;
+
+        public RedditApiClient(ILogger<RedditApiClient> logger, IRedditHttpClient httpClient)
         {
             _logger = logger;
+            _httpClient = httpClient;
 
-            _redditAppId = config["Reddit:AppId"];
-            _redditAppSecret = config["Reddit:AppSecret"];
-
-            _httpClient = new HttpClient(new RedditApiAuthenticationHandler(_redditAppId, _redditAppSecret, tokenProvider));
-            _httpClient.BaseAddress = new Uri("https://oauth.reddit.com");
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(config["Reddit:UserAgent"]);
-
-            _lastRequestTime = DateTime.UtcNow;
+            //New Posts
+            _newPostsChannel = Channel.CreateUnbounded<PostData>();
+            _newPostInterval = new IntervalFuncCaller<IEnumerable<PostData>>(GetNewPosts, 1, WriteNewPosts);
         }
 
-        private async Task AwaitHttpRequestLimit()
+        public void StartNewPosts()
         {
-            while (true)
+            if (!_newPostsRunning)
             {
-                var elapsedSeconds = (DateTime.UtcNow - _lastRequestTime).TotalSeconds;
-                var secondsPerRequest = 1.0;
-
-                if (elapsedSeconds >= secondsPerRequest)
+                lock (_newPostsLock)
                 {
-                    _lastRequestTime = DateTime.UtcNow;
-                    break;
+                    if (!_newPostsRunning)
+                    {
+                        _newPostsRunning = true;
+                        _newPostInterval.Start();
+                    }
                 }
-
-                var timeToWait = TimeSpan.FromSeconds(secondsPerRequest - elapsedSeconds);
-                await Task.Delay(timeToWait);
             }
+        }
+
+        public void StopNewPosts()
+        {
+            if (_newPostsRunning)
+            {
+                lock (_newPostsLock)
+                {
+                    if (_newPostsRunning)
+                    {
+                        _newPostsRunning = false;
+                        _newPostInterval.Stop();
+                    }
+                }
+            }
+        }
+
+        public async Task<IEnumerable<PostData>> GetNewPosts()
+        {
+            try
+            {
+                var response = await _httpClient.HttpClient.GetAsync("https://oauth.reddit.com/r/all/new?limit=100");
+
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadFromJsonAsync<NewPostResponse>();
+
+                if (content?.data?.children?.Count() > 0)
+                {
+                    return content.data.children.Select(m => m.data);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetNewPosts - Unable to retrieve new posts");
+                throw;
+            }
+
+            return Enumerable.Empty<PostData>();
+        }
+
+        public async Task WriteNewPosts(IEnumerable<PostData> postData)
+        {
+            Parallel.ForEach(postData, post =>
+            {
+                _newPostsChannel.Writer.TryWrite(post);
+            });
         }
     }
 }
