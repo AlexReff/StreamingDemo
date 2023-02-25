@@ -16,15 +16,13 @@ namespace StreamingDemo.Data.RedditApi
 
         private RedditAccessTokenResponse? _accessToken;
 
-        private readonly ILogger<RedditTokenProvider> _logger;
+        private readonly ILogger<IRedditTokenProvider> _logger;
         private readonly IRedditApiConfig _config;
 
-        public RedditTokenProvider(IRedditApiConfig config, ILogger<RedditTokenProvider> logger, HttpClient httpClient)
+        public RedditTokenProvider(IRedditApiConfig config, ILogger<IRedditTokenProvider> logger, HttpClient httpClient)
         {
             _config = config;
             _logger = logger;
-            //_httpClient = new HttpClient();
-            //_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_config.UserAgent);
             _httpClient = httpClient;
 
             _semaphore = new SemaphoreSlim(1);

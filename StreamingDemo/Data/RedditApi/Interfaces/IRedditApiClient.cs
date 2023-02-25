@@ -7,6 +7,8 @@ namespace StreamingDemo.Data.RedditApi.Interfaces
     {
         //New Posts
         ChannelReader<PostData> NewPosts { get; }
+        bool NewPostsActive { get; }
+
         void StartNewPosts();
         void StopNewPosts();
         Task<IEnumerable<PostData>> GetNewPosts();

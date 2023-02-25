@@ -15,7 +15,9 @@ namespace StreamingDemo.Data.RedditApi
 
         private readonly object _newPostsLock = new object();
         private bool _newPostsRunning;
+
         public ChannelReader<PostData> NewPosts => _newPostsChannel.Reader;
+        public bool NewPostsActive => _newPostsRunning;
 
         public RedditApiClient(ILogger<RedditApiClient> logger, IRedditHttpClient httpClient)
         {
@@ -27,9 +29,9 @@ namespace StreamingDemo.Data.RedditApi
             _newPostInterval = new IntervalFuncCaller<IEnumerable<PostData>>(GetNewPosts, 1, WriteNewPosts);
         }
 
-        private async Task AwaitHttpRequestLimit()
+        public void StartNewPosts()
         {
-            while (true)
+            if (!_newPostsRunning)
             {
                 lock (_newPostsLock)
                 {
@@ -71,6 +73,12 @@ namespace StreamingDemo.Data.RedditApi
                 {
                     return content.data.children.Select(m => m.data);
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetNewPosts - Unable to retrieve new posts");
+                throw;
+            }
 
             return Enumerable.Empty<PostData>();
         }

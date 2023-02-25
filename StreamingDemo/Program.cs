@@ -37,13 +37,19 @@ builder.Services.AddSpaStaticFiles(configuration =>
 });
 
 builder.Services.AddTransient<RedditApiThrottler>();
-builder.Services.AddTransient<RedditApiAuthenticationHandler>();
 
-//builder.Services.AddHttpClient<IRedditTokenProvider, RedditTokenProvider>()
-//    .ConfigureHttpClient(client =>
-//    {
-//        client.DefaultRequestHeaders.UserAgent.ParseAdd(redditApiConfig.UserAgent);
-//    });
+builder.Services.AddHttpClient<IRedditTokenProvider, RedditTokenProvider>()
+    .ConfigureHttpClient(client =>
+    {
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(redditApiConfig.UserAgent);
+    });
+
+builder.Services.AddTransient<RedditApiAuthenticationHandler>(provider =>
+{
+    IRedditTokenProvider tokenProvider = provider.GetRequiredService<IRedditTokenProvider>();
+    return new RedditApiAuthenticationHandler(tokenProvider);
+});
+
 
 builder.Services.AddHttpClient<IRedditHttpClient, RedditHttpClient>()
     .ConfigureHttpClient(client =>
@@ -52,6 +58,7 @@ builder.Services.AddHttpClient<IRedditHttpClient, RedditHttpClient>()
     })
     .AddHttpMessageHandler<RedditApiThrottler>()
     .AddHttpMessageHandler<RedditApiAuthenticationHandler>();
+
 
 builder.Services.AddSingleton<RedditApiClient>();
 
@@ -78,6 +85,8 @@ app.UseEndpoints(endpoints =>
     endpoints.MapHub<RedditHub>("/hub");
     //endpoints.MapControllers();
 });
+
+//app.MapHub<RedditHub>("/hub");
 
 //app.MapControllers();
 
