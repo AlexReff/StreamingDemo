@@ -1,44 +1,40 @@
-﻿using StreamingDemo.Models;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Net.Http;
 using System.Text;
 using System.Configuration;
+using StreamingDemo.Data.RedditApi.Interfaces;
+using StreamingDemo.Data.RedditApi.Models;
+using Microsoft.Extensions.Options;
 
 namespace StreamingDemo.Data.RedditApi
 {
-    public class RedditTokenProvider
+    public class RedditTokenProvider : IRedditTokenProvider
     {
         private HttpClient _httpClient;
         private SemaphoreSlim _semaphore;
         private DateTimeOffset _expires;
 
         private RedditAccessTokenResponse? _accessToken;
-        private string? _appId;
-        private string? _appSecret;
 
-        private readonly ILogger<RedditApiClient> _logger;
+        private readonly ILogger<RedditTokenProvider> _logger;
+        private readonly IRedditApiConfig _config;
 
-        public RedditTokenProvider(IConfiguration config, ILogger<RedditApiClient> logger)
+        public RedditTokenProvider(IRedditApiConfig config, ILogger<RedditTokenProvider> logger, HttpClient httpClient)
         {
+            _config = config;
             _logger = logger;
+            //_httpClient = new HttpClient();
+            //_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_config.UserAgent);
+            _httpClient = httpClient;
 
             _semaphore = new SemaphoreSlim(1);
-
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(config["Reddit:UserAgent"]);
         }
 
-        public void SetCredentials(string appId, string appSecret)
+        public async Task<IAccessToken> GetTokenAsync(bool forceRefresh = false)
         {
-            _appId = appId;
-            _appSecret = appSecret;
-        }
-
-        public async Task<RedditAccessTokenResponse> GetTokenAsync(bool forceRefresh = false)
-        {
-            if (string.IsNullOrEmpty(_appId) || string.IsNullOrEmpty(_appSecret))
+            if (string.IsNullOrEmpty(_config.AppId) || string.IsNullOrEmpty(_config.AppSecret))
             {
-                throw new ApplicationException("Missing AppID and/or AppSecret. Call SetCredentials(appId, appSecret) first.");
+                throw new ApplicationException("Missing AppID and/or AppSecret");
             }
 
             if (forceRefresh
@@ -72,7 +68,7 @@ namespace StreamingDemo.Data.RedditApi
                 _semaphore.Release();
             }
 
-            return _accessToken;
+            return new AccessToken(_accessToken.access_token);
         }
 
         private async Task<RedditAccessTokenResponse> RetrieveAccessToken()
@@ -86,7 +82,7 @@ namespace StreamingDemo.Data.RedditApi
 
             try
             {
-                var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_appId}:{_appSecret}"));
+                var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_config.AppId}:{_config.AppSecret}"));
                 var currentAuth = _httpClient.DefaultRequestHeaders.Authorization;
 
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);

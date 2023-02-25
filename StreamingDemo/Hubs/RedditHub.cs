@@ -5,25 +5,26 @@ using System.Linq;
 using System;
 using System.Text;
 using System.Threading;
-using StreamingDemo.Models;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using StreamingDemo.Data.RedditApi;
+using StreamingDemo.Data.RedditApi.Models;
+using StreamingDemo.Data.RedditApi.Interfaces;
 
 namespace StreamingDemo.Hubs
 {
     public class RedditHub : Hub
     {
         private readonly ILogger<RedditHub> _logger;
-        private readonly RedditApiClient _redditApi;
+        private readonly IRedditApiClient _redditApi;
 
-        public RedditHub(ILogger<RedditHub> logger, RedditApiClient RedditApiClient)
+        public RedditHub(ILogger<RedditHub> logger, RedditApiClient redditApiClient)
         {
             _logger = logger;
-            _redditApi = RedditApiClient;
+            _redditApi = redditApiClient;
         }
 
-        public ChannelReader<RedditApiPostData> NewPosts()
+        public ChannelReader<PostData> NewPosts()
         {
             _redditApi.StartNewPosts();
             return _redditApi.NewPosts;
