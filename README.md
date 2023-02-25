@@ -63,7 +63,6 @@ This work-in-progress project contains a demo of a C# .NET Core application that
 
 - Incomplete styling/layout
 - Some browser extensions, such as `uMatrix`, will prevent the web worker from starting when running the project locally
-- Visual Studio may display errors for `postMessage` calls in the worker. This is due to VS using an older version of Typescript and can be safely ignored.
 
 ## TODO
 

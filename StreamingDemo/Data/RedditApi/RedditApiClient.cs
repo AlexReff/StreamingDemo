@@ -27,9 +27,9 @@ namespace StreamingDemo.Data.RedditApi
             _newPostInterval = new IntervalFuncCaller<IEnumerable<PostData>>(GetNewPosts, 1, WriteNewPosts);
         }
 
-        public void StartNewPosts()
+        private async Task AwaitHttpRequestLimit()
         {
-            if (!_newPostsRunning)
+            while (true)
             {
                 lock (_newPostsLock)
                 {
@@ -71,12 +71,6 @@ namespace StreamingDemo.Data.RedditApi
                 {
                     return content.data.children.Select(m => m.data);
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "GetNewPosts - Unable to retrieve new posts");
-                throw;
-            }
 
             return Enumerable.Empty<PostData>();
         }
