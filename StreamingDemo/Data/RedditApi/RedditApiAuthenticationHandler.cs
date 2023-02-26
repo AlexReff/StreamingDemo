@@ -1,9 +1,5 @@
 ﻿using System.Net.Http.Headers;
-using System.Net.Http;
-using System.Text;
-using StreamingDemo.Data.RedditApi.Models;
 using StreamingDemo.Data.RedditApi.Interfaces;
-using System.Threading;
 
 namespace StreamingDemo.Data.RedditApi
 {
@@ -21,11 +17,7 @@ namespace StreamingDemo.Data.RedditApi
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            if (_accessToken == null)
-            {
-                _accessToken = await _tokenProvider.GetTokenAsync(true);
-            }
-            if (string.IsNullOrEmpty(_accessToken.Token))
+            if (_accessToken == null || string.IsNullOrEmpty(_accessToken.Token))
             {
                 _accessToken = await _tokenProvider.GetTokenAsync(true);
             }
