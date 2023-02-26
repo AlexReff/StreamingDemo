@@ -9,12 +9,11 @@ namespace StreamingDemo.Data.RedditApi
     {
         private HttpClient _httpClient;
         private SemaphoreSlim _semaphore;
-
         private AccessToken? _accessToken;
 
         private readonly ILogger<IRedditTokenProvider> _logger;
-
         private readonly string _credentials;
+
         private static readonly FormUrlEncodedContent _postData = new FormUrlEncodedContent(new Dictionary<string, string>()
         {
             { "grant_type", "client_credentials" }

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using StreamingDemo.Data.RedditApi;
-using StreamingDemo.Data.RedditApi.Models;
 using StreamingDemo.Data.RedditApi.Interfaces;
 using System.Runtime.CompilerServices;
 
@@ -14,13 +13,13 @@ namespace StreamingDemo.Hubs
         private static readonly object _newPostsLock = new object();
         private static int _newPostCount = 0;
 
-        public RedditHub(ILogger<RedditHub> logger, RedditApiClient redditApiClient)
+        public RedditHub(ILogger<RedditHub> logger, IRedditApiClient redditApiClient)
         {
             _logger = logger;
             _redditApi = redditApiClient;
         }
 
-        public async IAsyncEnumerable<IEnumerable<PostData>> NewPosts([EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<IEnumerable<IPostData>> NewPosts([EnumeratorCancellation] CancellationToken cancellationToken)
         {
             lock (_newPostsLock)
             {

@@ -1,5 +1,4 @@
 ﻿using StreamingDemo.Data.RedditApi.Interfaces;
-using StreamingDemo.Data.RedditApi.Models;
 using System.Threading.Channels;
 
 namespace StreamingDemo.Data.RedditApi
