@@ -5,9 +5,11 @@ namespace StreamingDemo.Data.RedditApi
     public class AccessToken : IAccessToken
     {
         private readonly string _token;
+        private readonly DateTimeOffset _expiration;
         public string Token => _token;
+        public DateTimeOffset Expiration => _expiration;
 
-        public AccessToken(string? accessToken)
+        public AccessToken(string? accessToken, DateTimeOffset expiration)
         {
             if (string.IsNullOrEmpty(accessToken))
             {
@@ -15,6 +17,7 @@ namespace StreamingDemo.Data.RedditApi
             }
 
             _token = accessToken;
+            _expiration = expiration;
         }
     }
 }

@@ -2,6 +2,7 @@
 {
     public interface IAccessToken
     {
-        public string Token { get; }
+        string Token { get; }
+        DateTimeOffset Expiration { get; }
     }
 }

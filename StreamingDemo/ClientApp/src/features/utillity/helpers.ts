@@ -1,19 +1,5 @@
 
-export function debounce<T extends (...args: any[]) => void>(func: T, delay: number): T {
-    let timeoutId: number;
-
-    const debouncedFunc = function (this: any, ...args: any[]) {
-        clearTimeout(timeoutId);
-
-        timeoutId = window.setTimeout(() => {
-            func.apply(this, args);
-        }, delay);
-    };
-
-    return debouncedFunc as T;
-}
-
-export class IntervalFuncCaller<T> {
+export class IntervalFunction<T> {
     private _timer: number | null = null;
     private _isRunning = false;
 

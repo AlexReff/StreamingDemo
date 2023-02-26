@@ -1,12 +1,8 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using System.Threading.Channels;
 using StreamingDemo.Data.RedditApi;
 using StreamingDemo.Data.RedditApi.Models;
 using StreamingDemo.Data.RedditApi.Interfaces;
-using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Xml.Linq;
 
 namespace StreamingDemo.Hubs
 {
@@ -24,14 +20,14 @@ namespace StreamingDemo.Hubs
             _redditApi = redditApiClient;
         }
 
-        public async IAsyncEnumerable<PostData> NewPosts([EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<IEnumerable<PostData>> NewPosts([EnumeratorCancellation] CancellationToken cancellationToken)
         {
             lock (_newPostsLock)
             {
                 _newPostCount++;
                 if (_newPostCount == 1)
                 {
-                    _redditApi.StartNewPosts();
+                    _redditApi.SetNewPostsActive(true);
                 }
             }
 
@@ -45,7 +41,7 @@ namespace StreamingDemo.Hubs
                 _newPostCount--;
                 if (_newPostCount == 0)
                 {
-                    _redditApi.StopNewPosts();
+                    _redditApi.SetNewPostsActive(false);
                 }
             }
         }

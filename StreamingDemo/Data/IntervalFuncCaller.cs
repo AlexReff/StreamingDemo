@@ -1,6 +1,6 @@
 ﻿namespace StreamingDemo.Data
 {
-    public class IntervalFuncCaller<T>
+    public class IntervalFuncCaller<T> : IDisposable
     {
         private readonly Timer _timer;
         private readonly object _lock = new object();
@@ -9,10 +9,10 @@
 
         private readonly double _intervalInSeconds;
 
-        private readonly Func<T, Task> _callback;
+        private readonly Func<T, Task>? _callback;
         private readonly Func<Task<T>> _action;
 
-        public IntervalFuncCaller(Func<Task<T>> action, double intervalInSeconds, Func<T, Task> callback = null)
+        public IntervalFuncCaller(Func<Task<T>> action, double intervalInSeconds, Func<T, Task>? callback = null)
         {
             _action = action;
             _callback = callback;
