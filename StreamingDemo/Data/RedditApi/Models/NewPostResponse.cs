@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using StreamingDemo.Data.RedditApi.Interfaces;
 
 namespace StreamingDemo.Data.RedditApi.Models
 {
@@ -19,7 +20,7 @@ namespace StreamingDemo.Data.RedditApi.Models
         public PostData data { get; set; }
     }
 
-    public class PostData
+    public class PostData : IPostData
     {
         public string subreddit { get; set; }
         public string thumbnail { get; set; }

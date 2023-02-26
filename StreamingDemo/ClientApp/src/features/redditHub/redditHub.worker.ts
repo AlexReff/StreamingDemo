@@ -1,5 +1,5 @@
 import { HubConnection, HubConnectionBuilder, LogLevel, ISubscription, HubConnectionState } from "@microsoft/signalr";
-import { IntervalFuncCaller } from "../utillity/helpers";
+import { IntervalFunction } from "../utillity/helpers";
 import { RedditHubChannels, RedditHubMessage, RedditHubMessageType, MessageError, MessageConnect, MessageSubscribe } from "./redditHub.worker.types";
 import { IRedditApiPostData } from "./redditHubTypes";
 
@@ -7,7 +7,7 @@ let connection: HubConnection | null = null;
 let newPostReader: ISubscription<IRedditApiPostData>;
 
 const activeSubscriptions: Set<RedditHubChannels> = new Set<RedditHubChannels>();
-const newPostStack: IRedditApiPostData[] = [];
+const newPostStack: IRedditApiPostData[][] = [];
 
 const post = self.postMessage;
 
@@ -48,12 +48,15 @@ self.onmessage = (messageString: MessageEvent<string>) => {
     }
 };
 
-const parseNewPostStack = new IntervalFuncCaller(async () => {
-    const results = newPostStack.splice(0);
-    if (results.length > 0) {
+const parseNewPostStack = new IntervalFunction(async () => {
+    if (newPostStack.length == 0) {
+        return;
+    }
+    const batch = newPostStack.shift();
+    if (batch != null && batch.length > 0) {
         post(JSON.stringify({
             messageType: RedditHubMessageType.Data,
-            dataType: RedditHubChannels.NewPosts, data: results,
+            dataType: RedditHubChannels.NewPosts, data: batch,
         }));
     }
 }, 1000);
@@ -133,7 +136,7 @@ const subscribeNewPosts = async () => {
         return;
     }
 
-    var newPostStream = connection.stream<IRedditApiPostData>('NewPosts');
+    var newPostStream = connection.stream<IRedditApiPostData[]>('NewPosts');
 
     parseNewPostStack.start();
 

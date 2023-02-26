@@ -60,7 +60,7 @@ builder.Services.AddHttpClient<IRedditHttpClient, RedditHttpClient>()
     .AddHttpMessageHandler<RedditApiAuthenticationHandler>();
 
 
-builder.Services.AddSingleton<RedditApiClient>();
+builder.Services.AddSingleton<IRedditApiClient, RedditApiClient>();
 
 var app = builder.Build();
 

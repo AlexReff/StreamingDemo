@@ -1,94 +1,61 @@
 ﻿using StreamingDemo.Data.RedditApi.Interfaces;
-using StreamingDemo.Data.RedditApi.Models;
 using System.Threading.Channels;
 
 namespace StreamingDemo.Data.RedditApi
 {
     public class RedditApiClient : IRedditApiClient
     {
-        private IRedditHttpClient _httpClient;
-        private readonly ILogger<RedditApiClient> _logger;
+        private readonly IRedditHttpClient _httpClient;
+        private readonly ILogger<IRedditApiClient> _logger;
 
         //New Posts
-        private readonly IntervalFuncCaller<IEnumerable<PostData>> _newPostInterval;
-        private readonly Channel<PostData> _newPostsChannel;
+        private readonly IntervalFuncCaller<IEnumerable<IPostData>> _newPostInterval;
+        private readonly Channel<IEnumerable<IPostData>> _newPostsChannel;
 
         private readonly object _newPostsLock = new object();
         private bool _newPostsRunning;
 
-        public ChannelReader<PostData> NewPosts => _newPostsChannel.Reader;
+        public ChannelReader<IEnumerable<IPostData>> NewPosts => _newPostsChannel.Reader;
         public bool NewPostsActive => _newPostsRunning;
 
-        public RedditApiClient(ILogger<RedditApiClient> logger, IRedditHttpClient httpClient)
+        public RedditApiClient(ILogger<IRedditApiClient> logger, IRedditHttpClient httpClient)
         {
             _logger = logger;
             _httpClient = httpClient;
 
             //New Posts
-            _newPostsChannel = Channel.CreateUnbounded<PostData>();
-            _newPostInterval = new IntervalFuncCaller<IEnumerable<PostData>>(GetNewPosts, 1, WriteNewPosts);
+            _newPostsChannel = Channel.CreateUnbounded<IEnumerable<IPostData>>();
+            _newPostInterval = new IntervalFuncCaller<IEnumerable<IPostData>>(_httpClient.GetNewPosts, 1, WriteNewPosts);
         }
 
-        public void StartNewPosts()
+        public void SetNewPostsActive(bool active)
         {
-            if (!_newPostsRunning)
+            lock (_newPostsLock)
             {
-                lock (_newPostsLock)
+                if (active == _newPostsRunning)
                 {
-                    if (!_newPostsRunning)
-                    {
-                        _newPostsRunning = true;
-                        _newPostInterval.Start();
-                    }
+                    // attempting to activate while already active,
+                    // or deactivating while already inactive
+                    return;
+                }
+                if (active)
+                {
+                    _newPostsRunning = true;
+                    _newPostInterval.Start();
+                    _logger.LogInformation("RedditApi Start collecting new posts");
+                }
+                else
+                {
+                    _newPostsRunning = false;
+                    _newPostInterval.Stop();
+                    _logger.LogInformation("RedditApi Stop collecting new posts");
                 }
             }
         }
 
-        public void StopNewPosts()
+        public async Task WriteNewPosts(IEnumerable<IPostData> postData)
         {
-            if (_newPostsRunning)
-            {
-                lock (_newPostsLock)
-                {
-                    if (_newPostsRunning)
-                    {
-                        _newPostsRunning = false;
-                        _newPostInterval.Stop();
-                    }
-                }
-            }
-        }
-
-        public async Task<IEnumerable<PostData>> GetNewPosts()
-        {
-            try
-            {
-                var response = await _httpClient.HttpClient.GetAsync("https://oauth.reddit.com/r/all/new?limit=100");
-
-                response.EnsureSuccessStatusCode();
-
-                var content = await response.Content.ReadFromJsonAsync<NewPostResponse>();
-
-                if (content?.data?.children?.Count() > 0)
-                {
-                    return content.data.children.Select(m => m.data);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "GetNewPosts - Unable to retrieve new posts");
-                throw;
-            }
-
-            return Enumerable.Empty<PostData>();
-        }
-
-        public async Task WriteNewPosts(IEnumerable<PostData> postData)
-        {
-            Parallel.ForEach(postData, post =>
-            {
-                _newPostsChannel.Writer.TryWrite(post);
-            });
+            await _newPostsChannel.Writer.WriteAsync(postData);
         }
     }
 }
