@@ -1,5 +1,5 @@
 ﻿using StreamingDemo.Data.RedditApi.Interfaces;
-using System.Threading.Channels;
+using StreamingDemo.Data.RedditApi.Models;
 
 namespace StreamingDemo.Data.RedditApi
 {
@@ -7,55 +7,44 @@ namespace StreamingDemo.Data.RedditApi
     {
         private readonly IRedditHttpClient _httpClient;
         private readonly ILogger<IRedditApiClient> _logger;
-
-        //New Posts
-        private readonly IntervalFuncCaller<IEnumerable<IPostData>> _newPostInterval;
-        private readonly Channel<IEnumerable<IPostData>> _newPostsChannel;
-
-        private readonly object _newPostsLock = new object();
-        private bool _newPostsRunning;
-
-        public ChannelReader<IEnumerable<IPostData>> NewPosts => _newPostsChannel.Reader;
-        public bool NewPostsActive => _newPostsRunning;
+        
+        public ManagedActiveChannel<IEnumerable<IPostData>> NewPosts { get; } 
 
         public RedditApiClient(ILogger<IRedditApiClient> logger, IRedditHttpClient httpClient)
         {
             _logger = logger;
             _httpClient = httpClient;
 
-            //New Posts
-            _newPostsChannel = Channel.CreateUnbounded<IEnumerable<IPostData>>();
-            _newPostInterval = new IntervalFuncCaller<IEnumerable<IPostData>>(_httpClient.GetNewPosts, 1, WriteNewPosts);
+            NewPosts = new ManagedActiveChannel<IEnumerable<IPostData>>(
+                async () => await GetNewPosts(),
+                TimeSpan.FromSeconds(1)
+            );
+
+            _logger.LogInformation("RedditApiClient initialized");
         }
 
-        public void SetNewPostsActive(bool active)
+        protected async Task<IEnumerable<IPostData>> GetNewPosts()
         {
-            lock (_newPostsLock)
+            try
             {
-                if (active == _newPostsRunning)
+                var response = await _httpClient.HttpClient.GetAsync("/r/all/new?limit=100");
+
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadFromJsonAsync<NewPostResponse>();
+
+                if (content?.data?.children?.Count() > 0)
                 {
-                    // attempting to activate while already active,
-                    // or deactivating while already inactive
-                    return;
-                }
-                if (active)
-                {
-                    _newPostsRunning = true;
-                    _newPostInterval.Start();
-                    _logger.LogInformation("RedditApi Start collecting new posts");
-                }
-                else
-                {
-                    _newPostsRunning = false;
-                    _newPostInterval.Stop();
-                    _logger.LogInformation("RedditApi Stop collecting new posts");
+                    return content.data.children.Select(m => m.data);
                 }
             }
-        }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "GetNewPosts - Unable to retrieve new posts");
+                throw;
+            }
 
-        public async Task WriteNewPosts(IEnumerable<IPostData> postData)
-        {
-            await _newPostsChannel.Writer.WriteAsync(postData);
+            return Enumerable.Empty<IPostData>();
         }
     }
 }

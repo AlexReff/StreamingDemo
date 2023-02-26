@@ -1,6 +1,6 @@
 # SignalR Streaming Data Demo
 
-This work-in-progress project contains a demo of a C# .NET Core application that polls new posts and streams the data via SignalR to a React client, which displays charts on various statistics via Victory.
+This work-in-progress project contains a demo of a C# .NET Core application that polls new posts and streams the data via SignalR to a React client, which displays charts on various statistics via Recharts.
 
 ## Requirements
 
@@ -57,7 +57,7 @@ This work-in-progress project contains a demo of a C# .NET Core application that
 - [React](https://github.com/facebook/react)
 - [Redux](https://github.com/reduxjs/redux)
 - [React-Redux](https://github.com/reduxjs/react-redux)
-- [Victory](https://github.com/FormidableLabs/victory)
+- [Recharts](https://github.com/recharts/recharts)
 
 ## Known Issues
 

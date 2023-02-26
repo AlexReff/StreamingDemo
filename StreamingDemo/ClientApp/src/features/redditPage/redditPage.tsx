@@ -6,7 +6,7 @@ import redditPageSlice, { initialState } from "./redditPageSlice";
 import styles from './RedditPage.module.css';
 import classNames from "classnames";
 import { useAppSelector } from "../../hooks";
-import { selectStatus } from "../redditHub/redditHubSlice";
+import { RedditHubStatus, selectStatus } from "../redditHub/redditHubSlice";
 import { Oval } from "react-loader-spinner";
 import { Alert } from "@mui/material";
 import FilterTiltShiftIcon from '@mui/icons-material/FilterTiltShift';
@@ -57,15 +57,15 @@ export const RedditPage: React.FC<RedditPageProps> = ({ }) => {
                 </div>
                 <div className={styles.footer}>
                     <div>
-                        {connectionStatus == 'idle' && (
+                        {connectionStatus == RedditHubStatus.idle && (
                             <Alert severity="success">Connected</Alert>
                         )}
-                        {(connectionStatus == 'loading' || connectionStatus == 'disconnected') && (
+                        {(connectionStatus == RedditHubStatus.loading || connectionStatus == RedditHubStatus.disconnected) && (
                             <Alert severity="warning" icon={<FilterTiltShiftIcon />}>
                                 Connecting...
                             </Alert>
                         )}
-                        {connectionStatus == 'failed' && (
+                        {connectionStatus == RedditHubStatus.failed && (
                             <Alert severity="error">Unable to Connect</Alert>
                         )}
                     </div>

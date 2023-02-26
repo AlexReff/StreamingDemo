@@ -49,6 +49,7 @@ namespace StreamingDemo.Data.RedditApi
 
                     if (result == null || string.IsNullOrEmpty(result.access_token))
                     {
+                        _semaphore.Release();
                         _logger.LogError("RetrieveAccessToken - Unable to retrieve Access Token");
                         throw new ApplicationException("Unable to retrieve Access Token");
                     }

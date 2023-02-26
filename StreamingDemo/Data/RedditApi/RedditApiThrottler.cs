@@ -12,11 +12,11 @@
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            await AwaitHttpRequestLimit();
+            await AwaitApiRequestLimit();
             return await base.SendAsync(request, cancellationToken);
         }
 
-        private async Task AwaitHttpRequestLimit()
+        private async Task AwaitApiRequestLimit()
         {
             while (true)
             {

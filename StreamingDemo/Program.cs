@@ -20,9 +20,9 @@ builder.Services.AddCors(options =>
     )
 );
 
-//builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpContextAccessor();
 
-//builder.Services.AddControllers();
+builder.Services.AddControllers();
 
 RedditApiConfig redditApiConfig = new RedditApiConfig(builder.Configuration);
 builder.Services.AddSingleton<IRedditApiConfig>(redditApiConfig);
@@ -55,6 +55,7 @@ builder.Services.AddHttpClient<IRedditHttpClient, RedditHttpClient>()
     .ConfigureHttpClient(client =>
     {
         client.DefaultRequestHeaders.UserAgent.ParseAdd(redditApiConfig.UserAgent);
+        client.BaseAddress = new Uri("https://oauth.reddit.com");
     })
     .AddHttpMessageHandler<RedditApiThrottler>()
     .AddHttpMessageHandler<RedditApiAuthenticationHandler>();

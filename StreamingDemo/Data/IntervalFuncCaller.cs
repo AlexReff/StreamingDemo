@@ -7,18 +7,18 @@
         private bool _isFetching = false;
         private bool _isRunning = false;
 
-        private readonly double _intervalInSeconds;
+        private readonly TimeSpan _interval;
 
         private readonly Func<T, Task>? _callback;
         private readonly Func<Task<T>> _action;
 
-        public IntervalFuncCaller(Func<Task<T>> action, double intervalInSeconds, Func<T, Task>? callback = null)
+        public IntervalFuncCaller(Func<Task<T>> action, TimeSpan interval, Func<T, Task>? callback = null)
         {
             _action = action;
             _callback = callback;
-            _intervalInSeconds = intervalInSeconds;
+            _interval = interval;
 
-            _timer = new Timer(async (state) => await RunLoop(), null, Timeout.InfiniteTimeSpan, TimeSpan.FromSeconds(_intervalInSeconds));
+            _timer = new Timer(async (state) => await RunLoop(), null, Timeout.InfiniteTimeSpan, _interval);
         }
 
         public void Start()
@@ -33,7 +33,7 @@
                 _isRunning = true;
             }
 
-            _timer.Change(TimeSpan.Zero, TimeSpan.FromSeconds(_intervalInSeconds));
+            _timer.Change(TimeSpan.Zero, _interval);
         }
 
         public void Stop()

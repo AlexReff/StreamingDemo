@@ -1,5 +1,5 @@
 import { HubConnection, HubConnectionBuilder, LogLevel, ISubscription, HubConnectionState } from "@microsoft/signalr";
-import { IntervalFunction } from "../utillity/helpers";
+import { IntervalFunction } from "../utillity";
 import { RedditHubChannels, RedditHubMessage, RedditHubMessageType, MessageError, MessageConnect, MessageSubscribe } from "./redditHub.worker.types";
 import { IRedditApiPostData } from "./redditHubTypes";
 

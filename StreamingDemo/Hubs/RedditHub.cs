@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using StreamingDemo.Data.RedditApi;
 using StreamingDemo.Data.RedditApi.Interfaces;
 using System.Runtime.CompilerServices;
 
@@ -10,9 +9,6 @@ namespace StreamingDemo.Hubs
         private readonly ILogger<RedditHub> _logger;
         private readonly IRedditApiClient _redditApi;
 
-        private static readonly object _newPostsLock = new object();
-        private static int _newPostCount = 0;
-
         public RedditHub(ILogger<RedditHub> logger, IRedditApiClient redditApiClient)
         {
             _logger = logger;
@@ -21,28 +17,16 @@ namespace StreamingDemo.Hubs
 
         public async IAsyncEnumerable<IEnumerable<IPostData>> NewPosts([EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            lock (_newPostsLock)
-            {
-                _newPostCount++;
-                if (_newPostCount == 1)
-                {
-                    _redditApi.SetNewPostsActive(true);
-                }
-            }
-
+            _logger.LogInformation("RedditHub:NewPosts activated");
             while (!cancellationToken.IsCancellationRequested)
             {
-                yield return await _redditApi.NewPosts.ReadAsync();
-            }
-
-            lock (_newPostsLock)
-            {
-                _newPostCount--;
-                if (_newPostCount == 0)
+                await foreach (var posts in _redditApi.NewPosts.GetData(cancellationToken))
                 {
-                    _redditApi.SetNewPostsActive(false);
+                    _logger.LogInformation("RedditHub:NewPosts returning results");
+                    yield return posts;
                 }
             }
+            _logger.LogInformation("RedditHub:NewPosts ended");
         }
     }
 }

@@ -7,6 +7,14 @@ import { IRedditApiPostData } from './redditHubTypes';
 
 const hubWorker = new Worker(new URL('./redditHub.worker.ts', import.meta.url));
 
+export enum RedditHubStatus {
+    idle,
+    loading,
+    failed,
+    invalid,
+    disconnected,
+};
+
 export interface RedditHubState {
     newPostStats: {
         totalCount: number;
@@ -14,7 +22,7 @@ export interface RedditHubState {
     },
     lastUpdate: number,
     initDate: number,
-    status: 'idle' | 'loading' | 'failed' | 'invalid' | 'disconnected';
+    status: RedditHubStatus;
 }
 
 const initNow = new Date();
@@ -26,7 +34,7 @@ const initialState: RedditHubState = {
     },
     lastUpdate: 0,
     initDate: initNow.getTime(),
-    status: 'disconnected',
+    status: RedditHubStatus.disconnected,
 };
 
 let connection: HubConnection | null = null;
@@ -81,7 +89,7 @@ export const redditHubSlice = createSlice({
         // which detects changes to a "draft state" and produces a brand new
         // immutable state based off those changes
         redditHubDisconnect: (state) => {
-            if (state.status != 'idle' || connection == null) {
+            if (state.status != RedditHubStatus.idle || connection == null) {
                 return;
             }
 
@@ -91,12 +99,12 @@ export const redditHubSlice = createSlice({
         },
         setConnected: (state, action: PayloadAction<boolean>) => {
             if (action.payload) {
-                state.status = 'idle';
+                state.status = RedditHubStatus.idle;
                 // toast("Connected", {
                 //     toastId: "connect"
                 // });
             } else {
-                state.status = 'disconnected';
+                state.status = RedditHubStatus.disconnected;
                 // toast("Disconnected", {
                 //     toastId: "disconnect"
                 // });
@@ -118,13 +126,13 @@ export const redditHubSlice = createSlice({
         receiveRedditHubConfig: (state, action: PayloadAction<'success' | 'error' | 'empty'>) => {
             switch (action.payload) {
                 case 'empty':
-                    state.status = 'invalid';
+                    state.status = RedditHubStatus.invalid;
                     break;
                 case 'success':
-                    state.status = 'idle';
+                    state.status = RedditHubStatus.idle;
                     break;
                 case 'error':
-                    state.status = 'failed';
+                    state.status = RedditHubStatus.failed;
                     break;
                 default:
                     break;
