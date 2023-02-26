@@ -1,8 +1,7 @@
-﻿
-namespace StreamingDemo.Data.RedditApi.Interfaces
+﻿namespace StreamingDemo.Data.RedditApi.Interfaces
 {
     public interface IRedditHttpClient
     {
-        Task<IEnumerable<IPostData>> GetNewPosts();
+        HttpClient HttpClient { get; }
     }
 }
