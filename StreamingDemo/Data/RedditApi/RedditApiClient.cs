@@ -8,7 +8,7 @@ namespace StreamingDemo.Data.RedditApi
         private readonly IRedditHttpClient _httpClient;
         private readonly ILogger<IRedditApiClient> _logger;
         
-        public ManagedActiveChannel<IEnumerable<IPostData>> NewPosts { get; } 
+        public IManagedActiveChannel<IEnumerable<IPostData>> NewPosts { get; } 
 
         public RedditApiClient(ILogger<IRedditApiClient> logger, IRedditHttpClient httpClient)
         {
@@ -23,7 +23,7 @@ namespace StreamingDemo.Data.RedditApi
             _logger.LogInformation("RedditApiClient initialized");
         }
 
-        protected async Task<IEnumerable<IPostData>> GetNewPosts()
+        public async Task<IEnumerable<IPostData>> GetNewPosts()
         {
             try
             {

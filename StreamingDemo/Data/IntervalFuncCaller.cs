@@ -12,6 +12,8 @@
         private readonly Func<T, Task>? _callback;
         private readonly Func<Task<T>> _action;
 
+        public bool IsRunning => _isRunning;
+
         public IntervalFuncCaller(Func<Task<T>> action, TimeSpan interval, Func<T, Task>? callback = null)
         {
             _action = action;

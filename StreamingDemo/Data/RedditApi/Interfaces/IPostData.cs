@@ -11,5 +11,8 @@
         public bool is_video { get; }
         public bool over_18 { get; }
         public bool spoiler { get; }
+
+        public string id { get; }
+        public string title { get; }
     }
 }

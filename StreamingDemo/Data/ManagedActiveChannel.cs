@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using StreamingDemo.Data.RedditApi.Interfaces;
+using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 
 namespace StreamingDemo.Data
@@ -7,13 +8,15 @@ namespace StreamingDemo.Data
     /// Ensures getDataFunc is only running while there is an active reader of GetData
     /// </summary>
     /// <typeparam name="T">Type of data to return</typeparam>
-    public class ManagedActiveChannel<T>
+    public class ManagedActiveChannel<T> : IManagedActiveChannel<T>
     {
         private readonly IntervalFuncCaller<T> _collectionFunc;
         private readonly Channel<T> _dataChannel;
 
         private readonly object _lock = new object();
         private static int _countActiveReaders = 0;
+
+        public bool CollectionActive => _collectionFunc.IsRunning;
 
         public ManagedActiveChannel(Func<Task<T>> getDataFunc, TimeSpan interval)
         {

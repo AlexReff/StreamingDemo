@@ -4,9 +4,9 @@ namespace StreamingDemo.Data.RedditApi
 {
     public class RedditHttpClient : IRedditHttpClient
     {
-        public HttpClient HttpClient { get; }
+        public IHttpClientWrapper HttpClient { get; }
 
-        public RedditHttpClient(HttpClient httpClient)
+        public RedditHttpClient(IHttpClientWrapper httpClient)
         {
             HttpClient = httpClient;
         }
